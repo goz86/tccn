@@ -441,7 +441,7 @@ async function showApp() {
     // Load data from Supabase
     try {
         monthlyBudget = applyDemoBudgetIfEmpty(await loadBudgets());
-        savingsGoals = await loadGoals();
+        savingsGoals = enrichGoalsWithMeta(await loadGoals());
     } catch (e) {
         console.error('Load data error:', e);
         showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
@@ -970,6 +970,55 @@ function renderBudgetHealth() {
 }
 
 // ===== Savings Goals =====
+const GOAL_META_STORAGE_KEY = 'goz_savings_goals_meta';
+
+function getGoalsMetaMap() {
+    try {
+        return JSON.parse(localStorage.getItem(GOAL_META_STORAGE_KEY) || '{}');
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveGoalMeta(goalId, meta) {
+    if (!goalId) return;
+    try {
+        const all = getGoalsMetaMap();
+        all[goalId] = { ...(all[goalId] || {}), ...meta };
+        localStorage.setItem(GOAL_META_STORAGE_KEY, JSON.stringify(all));
+    } catch (e) {
+        console.error('saveGoalMeta error:', e);
+    }
+}
+
+function removeGoalMeta(goalId) {
+    if (!goalId) return;
+    try {
+        const all = getGoalsMetaMap();
+        delete all[goalId];
+        localStorage.setItem(GOAL_META_STORAGE_KEY, JSON.stringify(all));
+    } catch (e) {
+        console.error('removeGoalMeta error:', e);
+    }
+}
+
+function enrichGoalsWithMeta(goals) {
+    if (!Array.isArray(goals)) return [];
+    const metas = getGoalsMetaMap();
+    return goals.map(g => {
+        const meta = metas[g.id];
+        if (meta) {
+            return {
+                ...g,
+                currency: meta.currency || g.currency || 'KRW',
+                amountVND: meta.amountVND !== undefined ? meta.amountVND : g.amountVND,
+                amountKRW: meta.amountKRW !== undefined ? meta.amountKRW : g.amountKRW
+            };
+        }
+        return g;
+    });
+}
+
 function previewGoalVND() {
     const currency = document.getElementById('goalCurrency')?.value || 'KRW';
     const raw = parseRawValue(document.getElementById('goalAmount')?.value);
@@ -1016,6 +1065,8 @@ async function addSavingsGoal() {
         const goal = await saveGoal(name, amountKRW, months);
         goal.currency = currency;
         goal.amountVND = amountVND;
+        goal.amountKRW = amountKRW;
+        saveGoalMeta(goal.id, { currency, amountVND, amountKRW });
         savingsGoals.push(goal);
         document.getElementById('goalName').value = '';
         document.getElementById('goalAmount').value = '';
@@ -1032,6 +1083,7 @@ async function addSavingsGoal() {
 async function deleteSavingsGoal(id) {
     try {
         await deleteGoalFromDB(id);
+        removeGoalMeta(id);
         savingsGoals = savingsGoals.filter(g => g.id !== id);
         renderSavingsGoals();
         showToast('Đã xóa mục tiêu', 'info');
@@ -1039,6 +1091,21 @@ async function deleteSavingsGoal(id) {
         showToast('Lỗi xóa: ' + err.message, 'error');
     }
 }
+
+function toggleGoalCurrency(id) {
+    const g = savingsGoals.find(item => item.id === id);
+    if (!g) return;
+    const r = exchangeRate || 18.5;
+    const currentCurr = g.currency === 'VND' ? 'VND' : 'KRW';
+    const newCurr = currentCurr === 'VND' ? 'KRW' : 'VND';
+    g.currency = newCurr;
+    if (!g.amountVND && g.amountKRW) g.amountVND = Math.round(g.amountKRW * r);
+    if (!g.amountKRW && g.amountVND) g.amountKRW = Math.round(g.amountVND / r);
+    saveGoalMeta(id, { currency: newCurr, amountVND: g.amountVND, amountKRW: g.amountKRW });
+    renderSavingsGoals();
+    showToast(`Đã đổi mục tiêu "${g.name}" sang gốc ${newCurr}`, 'info');
+}
+window.toggleGoalCurrency = toggleGoalCurrency;
 
 function renderSavingsGoals() {
     const container = document.getElementById('goalsList');
@@ -1049,11 +1116,14 @@ function renderSavingsGoals() {
     const balanceVND = Math.round(balanceKRW * r);
 
     container.innerHTML = savingsGoals.map(g => {
-        const targetVND = g.amountVND || Math.round(g.amountKRW * r);
-        const targetKRW = g.amountKRW || Math.round(targetVND / r);
-        const pct = Math.min(100, Math.max(0, Math.round((balanceVND / targetVND) * 100)));
+        const isVND = g.currency === 'VND';
+        const targetVND = g.amountVND || Math.round((g.amountKRW || 0) * r);
+        const targetKRW = g.amountKRW || Math.round((g.amountVND || 0) / r);
+        const pct = isVND
+            ? (targetVND > 0 ? Math.min(100, Math.max(0, Math.round((balanceVND / targetVND) * 100))) : 0)
+            : (targetKRW > 0 ? Math.min(100, Math.max(0, Math.round((balanceKRW / targetKRW) * 100))) : 0);
 
-        const amountDisplay = g.currency === 'VND'
+        const amountDisplay = isVND
             ? `${fmtVND(targetVND)} (≈ ${fmtKRW(targetKRW)})`
             : `${fmtKRW(targetKRW)} (≈ ${fmtVND(targetVND)})`;
 
@@ -1062,7 +1132,7 @@ function renderSavingsGoals() {
             : `<span class="goal-meta">${iconMarkup('calendar-clock')} Tự do</span>`;
 
         const monthlyHtml = g.months && g.months > 0
-            ? `<span class="goal-meta">${iconMarkup('circle-dollar-sign')} ${g.currency === 'VND' ? fmtVND(Math.round(targetVND / g.months)) : fmtKRW(Math.round(targetKRW / g.months))}/tháng</span>`
+            ? `<span class="goal-meta">${iconMarkup('circle-dollar-sign')} ${isVND ? fmtVND(Math.round(targetVND / g.months)) : fmtKRW(Math.round(targetKRW / g.months))}/tháng</span>`
             : '';
 
         const remainingVND = Math.max(0, targetVND - balanceVND);
@@ -1071,7 +1141,7 @@ function renderSavingsGoals() {
         let remainingText = '';
         if (pct >= 100 || (remainingVND <= 0 && remainingKRW <= 0)) {
             remainingText = '(🎉 Hoàn thành)';
-        } else if (g.currency === 'VND') {
+        } else if (isVND) {
             remainingText = `(${fmtVND(remainingVND)} ≈ ${fmtKRW(remainingKRW)})`;
         } else {
             remainingText = `(${fmtKRW(remainingKRW)} ≈ ${fmtVND(remainingVND)})`;
@@ -1081,7 +1151,9 @@ function renderSavingsGoals() {
             <div class="goal-info">
                 <div class="goal-name">${iconMarkup('target')} ${escapeHtml(g.name)}</div>
                 <div class="goal-details">
-                    <span class="goal-meta">${iconMarkup('banknote')} ${amountDisplay}</span>
+                    <span class="goal-meta goal-amount-tag" onclick="toggleGoalCurrency('${g.id}')" title="Bấm để chuyển đổi hiển thị gốc VND ↔ KRW" style="cursor:pointer; user-select:none;">
+                        ${iconMarkup('banknote')} <strong>${amountDisplay}</strong> <span style="opacity:0.8; font-size:10px; margin-left:3px; text-decoration:underline;">⇄ Đổi gốc</span>
+                    </span>
                     ${durationHtml}
                     ${monthlyHtml}
                 </div>
