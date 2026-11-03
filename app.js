@@ -604,7 +604,8 @@ function toggleTheme() {
 
 function setDefaultDate() {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN', options);
+    const el = document.getElementById('currentDate');
+    if (el) el.textContent = new Date().toLocaleDateString('vi-VN', options);
 }
 
 // ===== Exchange Rate =====

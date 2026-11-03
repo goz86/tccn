@@ -7978,33 +7978,7 @@ select.goal-currency-select option {
     color: #ef4444;
     background: rgba(239, 68, 68, 0.08);
 }
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
 
-.asset-action-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    transition: var(--transition);
-}
-
-.asset-action-btn:hover {
-    background: var(--bg-card);
-    color: var(--text-primary);
-}
-
-.asset-action-btn.delete:hover {
-    color: var(--accent-red);
-    background: rgba(255, 107, 107, 0.12);
-}
 
 /* Modal Form Customizations */
 .asset-modal-card {
