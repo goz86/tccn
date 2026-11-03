@@ -1726,7 +1726,7 @@ function renderBudgetOverviewChart() {
         `<text x="${xPos(i)}" y="${H - 10}" text-anchor="middle" class="budget-flow-x-label">${label}</text>`
     )).join('');
 
-    const chartMode = window.chartViewMode || 'combo'; // 'combo', 'bar', 'line'
+    const chartMode = window.chartViewMode || localStorage.getItem('goz_chart_mode') || 'line'; // 'combo', 'bar', 'line'
 
     let defsSvg = `
         <defs>

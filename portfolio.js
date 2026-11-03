@@ -123,10 +123,11 @@ window.setAssetFilter = function (filter) {
 };
 
 // Chart Mode Selector
-window.chartViewMode = 'combo';
+window.chartViewMode = localStorage.getItem('goz_chart_mode') || 'line';
 window.setChartTypeMode = function (mode) {
     chartViewMode = mode;
     window.chartViewMode = mode;
+    try { localStorage.setItem('goz_chart_mode', mode); } catch (e) {}
     ['btnModeCombo', 'btnModeBar', 'btnModeLine'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
@@ -898,33 +899,284 @@ function escapeHtml(s) {
 // ===== Modals & Form Actions =====
 
 // Quick chip selection for crypto
+// Danh mục Top Crypto phổ biến có sẵn (phản hồi tức thì 0ms)
+const POPULAR_CRYPTO_LIST = [
+    { s: 'BTC', n: 'Bitcoin', r: 1 },
+    { s: 'ETH', n: 'Ethereum', r: 2 },
+    { s: 'USDT', n: 'Tether USD', r: 3 },
+    { s: 'BNB', n: 'BNB', r: 4 },
+    { s: 'SOL', n: 'Solana', r: 5 },
+    { s: 'XRP', n: 'XRP', r: 6 },
+    { s: 'DOGE', n: 'Dogecoin', r: 7 },
+    { s: 'ADA', n: 'Cardano', r: 8 },
+    { s: 'TRX', n: 'TRON', r: 9 },
+    { s: 'AVAX', n: 'Avalanche', r: 10 },
+    { s: 'SUI', n: 'Sui', r: 11 },
+    { s: 'LINK', n: 'Chainlink', r: 12 },
+    { s: 'SHIB', n: 'Shiba Inu', r: 13 },
+    { s: 'TON', n: 'Toncoin', r: 14 },
+    { s: 'XLM', n: 'Stellar', r: 15 },
+    { s: 'DOT', n: 'Polkadot', r: 16 },
+    { s: 'BCH', n: 'Bitcoin Cash', r: 17 },
+    { s: 'NEAR', n: 'NEAR Protocol', r: 18 },
+    { s: 'UNI', n: 'Uniswap', r: 19 },
+    { s: 'PEPE', n: 'Pepe', r: 20 },
+    { s: 'LTC', n: 'Litecoin', r: 21 },
+    { s: 'APT', n: 'Aptos', r: 22 },
+    { s: 'ICP', n: 'Internet Computer', r: 23 },
+    { s: 'POL', n: 'Polygon Ecosystem Token', r: 24 },
+    { s: 'MATIC', n: 'Polygon', r: 25 },
+    { s: 'HBAR', n: 'Hedera', r: 26 },
+    { s: 'ATOM', n: 'Cosmos', r: 27 },
+    { s: 'FET', n: 'Artificial Superintelligence', r: 28 },
+    { s: 'RENDER', n: 'Render', r: 29 },
+    { s: 'TAO', n: 'Bittensor', r: 30 },
+    { s: 'ARB', n: 'Arbitrum', r: 31 },
+    { s: 'OP', n: 'Optimism', r: 32 },
+    { s: 'VET', n: 'VeChain', r: 33 },
+    { s: 'FIL', n: 'Filecoin', r: 34 },
+    { s: 'TIA', n: 'Celestia', r: 35 },
+    { s: 'INJ', n: 'Injective', r: 36 },
+    { s: 'KAS', n: 'Kaspa', r: 37 },
+    { s: 'FTM', n: 'Fantom', r: 38 },
+    { s: 'WIF', n: 'dogwifhat', r: 39 },
+    { s: 'BONK', n: 'Bonk', r: 40 },
+    { s: 'FLOKI', n: 'Floki', r: 41 },
+    { s: 'SEI', n: 'Sei', r: 42 },
+    { s: 'AAVE', n: 'Aave', r: 43 },
+    { s: 'ALGO', n: 'Algorand', r: 44 },
+    { s: 'GRT', n: 'The Graph', r: 45 },
+    { s: 'RUNE', n: 'THORChain', r: 46 },
+    { s: 'MKR', n: 'Maker', r: 47 },
+    { s: 'STX', n: 'Stacks', r: 48 },
+    { s: 'CRV', n: 'Curve DAO', r: 49 },
+    { s: 'IMX', n: 'Immutable', r: 50 },
+    { s: 'ENA', n: 'Ethena', r: 51 },
+    { s: 'ONDO', n: 'Ondo Finance', r: 52 },
+    { s: 'NOT', n: 'Notcoin', r: 53 },
+    { s: 'WLD', n: 'Worldcoin', r: 54 },
+    { s: 'JUP', n: 'Jupiter', r: 55 },
+    { s: 'PYTH', n: 'Pyth Network', r: 56 },
+    { s: 'PENDLE', n: 'Pendle', r: 57 },
+    { s: 'GALA', n: 'Gala', r: 58 },
+    { s: 'SAND', n: 'The Sandbox', r: 59 },
+    { s: 'MANA', n: 'Decentraland', r: 60 },
+    { s: 'AXS', n: 'Axie Infinity', r: 61 },
+    { s: 'DYDX', n: 'dYdX', r: 62 },
+    { s: 'STRK', n: 'Starknet', r: 63 },
+    { s: 'ZK', n: 'ZKsync', r: 64 },
+    { s: 'IO', n: 'io.net', r: 65 },
+    { s: 'KAVA', n: 'Kava', r: 66 },
+    { s: 'MINA', n: 'Mina', r: 67 },
+    { s: 'COMP', n: 'Compound', r: 68 },
+    { s: 'SNX', n: 'Synthetix', r: 69 },
+    { s: '1INCH', n: '1inch Network', r: 70 },
+    { s: 'LDO', n: 'Lido DAO', r: 71 },
+    { s: 'ENS', n: 'Ethereum Name Service', r: 72 },
+    { s: 'JASMY', n: 'JasmyCoin', r: 73 },
+    { s: 'CAKE', n: 'PancakeSwap', r: 74 },
+    { s: 'NEO', n: 'NEO', r: 75 },
+    { s: 'EOS', n: 'EOS', r: 76 },
+    { s: 'XMR', n: 'Monero', r: 77 },
+    { s: 'USDC', n: 'USD Coin', r: 78 },
+    { s: 'FDUSD', n: 'First Digital USD', r: 79 },
+    { s: 'FLOW', n: 'Flow', r: 80 },
+    { s: 'EGLD', n: 'MultiversX', r: 81 },
+    { s: 'QNT', n: 'Quant', r: 82 },
+    { s: 'CHZ', n: 'Chiliz', r: 83 },
+    { s: 'AR', n: 'Arweave', r: 84 },
+    { s: 'BEAM', n: 'Beam', r: 85 },
+    { s: 'RON', n: 'Ronin', r: 86 },
+    { s: 'BLUR', n: 'Blur', r: 87 },
+    { s: 'ZEC', n: 'Zcash', r: 88 },
+    { s: 'DYM', n: 'Dymension', r: 89 },
+    { s: 'APE', n: 'ApeCoin', r: 90 },
+    { s: 'ROSE', n: 'Oasis Network', r: 91 },
+    { s: 'GNO', n: 'Gnosis', r: 92 },
+    { s: 'CFX', n: 'Conflux', r: 93 },
+    { s: 'CORE', n: 'Core', r: 94 },
+    { s: 'W', n: 'Wormhole', r: 95 },
+    { s: 'ORDI', n: 'ORDI', r: 96 },
+    { s: 'SATS', n: 'SATS', r: 97 },
+    { s: 'POPCAT', n: 'Popcat', r: 98 },
+    { s: 'BRETT', n: 'Brett', r: 99 },
+    { s: 'MNT', n: 'Mantle', r: 100 }
+];
+
+let cryptoSuggestDebounce = null;
+let cryptoSuggestSelectedIdx = -1;
+let currentSuggestItems = [];
+
 window.selectCryptoChip = function (sym, name) {
     document.getElementById('inputCryptoSymbol').value = sym;
     document.getElementById('inputCryptoName').value = name;
+    window.hideCryptoSuggestions();
     fetchLiveCryptoPriceForModal();
 };
 
-window.onCryptoSymbolChange = function (val) {
-    const sym = val.toUpperCase().trim();
-    const defaults = {
-        'BTC': 'Bitcoin',
-        'ETH': 'Ethereum',
-        'SOL': 'Solana',
-        'USDT': 'Tether USD',
-        'BNB': 'BNB',
-        'XRP': 'Ripple',
-        'ADA': 'Cardano',
-        'DOGE': 'Dogecoin',
-        'SUI': 'Sui',
-        'NEAR': 'NEAR Protocol'
-    };
-    if (defaults[sym] && !document.getElementById('inputCryptoName').value) {
-        document.getElementById('inputCryptoName').value = defaults[sym];
+window.hideCryptoSuggestions = function () {
+    const box = document.getElementById('cryptoSuggestBox');
+    if (box) {
+        box.style.display = 'none';
+        box.innerHTML = '';
     }
-    if (sym.length >= 2) {
-        fetchLiveCryptoPriceForModal();
+    cryptoSuggestSelectedIdx = -1;
+    currentSuggestItems = [];
+};
+
+function renderCryptoSuggestions(list, isSearching) {
+    const box = document.getElementById('cryptoSuggestBox');
+    if (!box) return;
+    if (!list || list.length === 0) {
+        if (isSearching) {
+            box.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-muted);text-align:center;">Đang tìm kiếm đồng coin...</div>';
+            box.style.display = 'block';
+        } else {
+            window.hideCryptoSuggestions();
+        }
+        return;
+    }
+    currentSuggestItems = list;
+    cryptoSuggestSelectedIdx = -1;
+    let itemsHtml = '<div class="crypto-suggest-header">Gợi ý đồng coin (Nhấp để chọn)</div>';
+    list.slice(0, 8).forEach(function (coin, idx) {
+        const iconUrl = coin.thumb || ('https://assets.coincap.io/assets/icons/' + coin.s.toLowerCase() + '@2x.png');
+        const fallback = (coin.s || '').slice(0, 2);
+        const rankStr = coin.r ? ('#' + coin.r) : 'Crypto';
+        const safeName = coin.n.replace(/'/g, "\\'");
+        itemsHtml += '<div class="crypto-suggest-item" data-idx="' + idx + '" onclick="selectCryptoSuggestedCoin(\'' + coin.s + '\', \'' + safeName + '\')">' +
+            '<div class="crypto-suggest-left">' +
+            '<img src="' + iconUrl + '" alt="' + coin.s + '" class="crypto-suggest-icon" onerror="this.style.display=\'none\'; if(this.nextElementSibling) this.nextElementSibling.style.display=\'flex\';">' +
+            '<span class="crypto-suggest-fallback-icon" style="display:none;">' + fallback + '</span>' +
+            '<div class="crypto-suggest-meta">' +
+            '<span class="crypto-suggest-sym">' + coin.s + '</span>' +
+            '<span class="crypto-suggest-name">' + coin.n + '</span>' +
+            '</div>' +
+            '</div>' +
+            '<span class="crypto-suggest-badge">' + rankStr + '</span>' +
+            '</div>';
+    });
+    box.innerHTML = itemsHtml;
+    box.style.display = 'block';
+}
+
+window.onCryptoSymbolFocus = function () {
+    const raw = (document.getElementById('inputCryptoSymbol').value || '').trim();
+    if (!raw) {
+        renderCryptoSuggestions(POPULAR_CRYPTO_LIST.slice(0, 8), false);
+    } else {
+        window.onCryptoSymbolInput(raw);
     }
 };
+
+window.onCryptoSymbolInput = function (val) {
+    const query = (val || '').trim();
+    if (!query) {
+        renderCryptoSuggestions(POPULAR_CRYPTO_LIST.slice(0, 8), false);
+        return;
+    }
+    const upper = query.toUpperCase();
+    const localMatches = POPULAR_CRYPTO_LIST.filter(function (c) {
+        return c.s.toUpperCase().includes(upper) || c.n.toUpperCase().includes(upper);
+    });
+    localMatches.sort(function (a, b) {
+        if (a.s === upper && b.s !== upper) return -1;
+        if (b.s === upper && a.s !== upper) return 1;
+        if (a.s.startsWith(upper) && !b.s.startsWith(upper)) return -1;
+        if (b.s.startsWith(upper) && !a.s.startsWith(upper)) return 1;
+        return (a.r || 999) - (b.r || 999);
+    });
+    renderCryptoSuggestions(localMatches, query.length >= 2);
+    const exact = POPULAR_CRYPTO_LIST.find(function (c) { return c.s === upper; });
+    if (exact && !document.getElementById('inputCryptoName').value) {
+        document.getElementById('inputCryptoName').value = exact.n;
+    }
+    if (cryptoSuggestDebounce) clearTimeout(cryptoSuggestDebounce);
+    if (query.length >= 2) {
+        cryptoSuggestDebounce = setTimeout(async function () {
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(query));
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.coins && Array.isArray(data.coins)) {
+                        const apiCoins = data.coins.slice(0, 6).map(function (c) {
+                            return {
+                                s: (c.symbol || '').toUpperCase(),
+                                n: c.name || '',
+                                r: c.market_cap_rank || null,
+                                thumb: c.thumb || ''
+                            };
+                        });
+                        const combined = [].concat(localMatches);
+                        apiCoins.forEach(function (ac) {
+                            if (!combined.some(function (item) { return item.s === ac.s; })) {
+                                combined.push(ac);
+                            }
+                        });
+                        renderCryptoSuggestions(combined, false);
+                    }
+                }
+            } catch (err) {
+                console.warn('Crypto search API error:', err);
+            }
+        }, 280);
+    }
+};
+
+window.onCryptoSymbolChange = window.onCryptoSymbolInput;
+
+window.onCryptoNameInput = function (val) {
+    const query = (val || '').trim().toLowerCase();
+    if (!query) return;
+    const match = POPULAR_CRYPTO_LIST.find(function (c) { return c.n.toLowerCase().includes(query); });
+    if (match && !document.getElementById('inputCryptoSymbol').value) {
+        document.getElementById('inputCryptoSymbol').value = match.s;
+    }
+};
+
+window.onCryptoSymbolKeydown = function (e) {
+    const box = document.getElementById('cryptoSuggestBox');
+    if (!box || box.style.display === 'none' || currentSuggestItems.length === 0) return;
+    const items = box.querySelectorAll('.crypto-suggest-item');
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        cryptoSuggestSelectedIdx = (cryptoSuggestSelectedIdx + 1) % items.length;
+        items.forEach(function (it, i) { it.classList.toggle('selected', i === cryptoSuggestSelectedIdx); });
+        if (items[cryptoSuggestSelectedIdx]) items[cryptoSuggestSelectedIdx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        cryptoSuggestSelectedIdx = (cryptoSuggestSelectedIdx - 1 + items.length) % items.length;
+        items.forEach(function (it, i) { it.classList.toggle('selected', i === cryptoSuggestSelectedIdx); });
+        if (items[cryptoSuggestSelectedIdx]) items[cryptoSuggestSelectedIdx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+        if (cryptoSuggestSelectedIdx >= 0 && currentSuggestItems[cryptoSuggestSelectedIdx]) {
+            e.preventDefault();
+            const picked = currentSuggestItems[cryptoSuggestSelectedIdx];
+            window.selectCryptoSuggestedCoin(picked.s, picked.n);
+        }
+    } else if (e.key === 'Escape') {
+        window.hideCryptoSuggestions();
+    }
+};
+
+window.selectCryptoSuggestedCoin = function (sym, name) {
+    document.getElementById('inputCryptoSymbol').value = sym;
+    document.getElementById('inputCryptoName').value = name;
+    window.hideCryptoSuggestions();
+    fetchLiveCryptoPriceForModal();
+    const amtEl = document.getElementById('inputCryptoAmount');
+    if (amtEl) amtEl.focus();
+};
+
+document.addEventListener('click', function (e) {
+    const box = document.getElementById('cryptoSuggestBox');
+    const input = document.getElementById('inputCryptoSymbol');
+    if (box && box.style.display !== 'none') {
+        if (input && !input.contains(e.target) && !box.contains(e.target)) {
+            window.hideCryptoSuggestions();
+        }
+    }
+});
 
 window.fetchLiveCryptoPriceForModal = async function () {
     const sym = (document.getElementById('inputCryptoSymbol').value || '').toUpperCase().trim();
@@ -933,14 +1185,39 @@ window.fetchLiveCryptoPriceForModal = async function () {
         const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + sym + 'USDT');
         if (res.ok) {
             const data = await res.json();
-            document.getElementById('inputCryptoCurrentPrice').value = parseFloat(data.price);
+            const price = parseFloat(data.price);
+            document.getElementById('inputCryptoCurrentPrice').value = price;
             calcCryptoModalPreview();
             if (typeof window.showToast === 'function') {
-                window.showToast('Đã lấy giá live Binance: $' + parseFloat(data.price).toLocaleString('en-US'), 'info');
+                window.showToast('Giá live Binance (' + sym + '): $' + price.toLocaleString('en-US'), 'info');
             }
+            return;
         }
     } catch (e) {
-        console.warn(e);
+        console.warn('Binance price fetch error:', e);
+    }
+    try {
+        const searchRes = await fetch('https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(sym));
+        if (searchRes.ok) {
+            const searchData = await searchRes.json();
+            const match = (searchData.coins || []).find(function (c) { return c.symbol.toUpperCase() === sym; }) || (searchData.coins || [])[0];
+            if (match && match.id) {
+                const pRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + match.id + '&vs_currencies=usd');
+                if (pRes.ok) {
+                    const pData = await pRes.json();
+                    if (pData[match.id] && pData[match.id].usd) {
+                        const price = pData[match.id].usd;
+                        document.getElementById('inputCryptoCurrentPrice').value = price;
+                        calcCryptoModalPreview();
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Giá live CoinGecko (' + sym + '): $' + price.toLocaleString('en-US'), 'info');
+                        }
+                    }
+                }
+            }
+        }
+    } catch (e2) {
+        console.warn('CoinGecko price fetch error:', e2);
     }
 };
 
@@ -969,6 +1246,7 @@ window.calcCryptoModalPreview = function () {
 };
 
 window.openAddCryptoModal = function () {
+    if (typeof window.hideCryptoSuggestions === "function") window.hideCryptoSuggestions();
     document.getElementById('cryptoModalTitle').textContent = 'Thêm Đồng Coin (Crypto)';
     document.getElementById('editingCryptoId').value = '';
     document.getElementById('inputCryptoSymbol').value = '';
@@ -1003,6 +1281,7 @@ window.openEditCryptoModal = function (id) {
 };
 
 window.closeAssetCryptoModal = function () {
+    if (typeof window.hideCryptoSuggestions === "function") window.hideCryptoSuggestions();
     const modal = document.getElementById('assetCryptoModal');
     if (modal) {
         modal.classList.remove('active');
