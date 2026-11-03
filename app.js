@@ -439,6 +439,7 @@ async function checkSession() {
         const session = await getSession();
         if (session) {
             currentUser = session.user;
+            window.currentUser = session.user;
             await showApp();
         } else {
             showAuth();
@@ -452,9 +453,14 @@ async function checkSession() {
 async function handleAuthChange(event, session) {
     if (event === 'SIGNED_IN' && session) {
         currentUser = session.user;
+        window.currentUser = session.user;
         await showApp();
     } else if (event === 'SIGNED_OUT') {
         currentUser = null;
+        window.currentUser = null;
+        if (typeof window.resetPortfolioForLogout === 'function') {
+            window.resetPortfolioForLogout();
+        }
         showAuth();
     }
 }
@@ -478,6 +484,9 @@ async function showApp() {
     try {
         monthlyBudget = applyDemoBudgetIfEmpty(await loadBudgets());
         savingsGoals = enrichGoalsWithMeta(await loadGoals());
+        if (typeof window.loadPortfolioData === 'function') {
+            await window.loadPortfolioData();
+        }
     } catch (e) {
         console.error('Load data error:', e);
         showToast('Lỗi tải dữ liệu: ' + e.message, 'error');

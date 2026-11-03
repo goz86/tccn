@@ -4,6 +4,8 @@ var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 var supabaseClient;
 var currentUser = null;
+    window.currentUser = null;
+window.currentUser = null;
 
 function initSupabase() {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -50,6 +52,7 @@ async function getSession() {
 function onAuthStateChange(callback) {
     supabaseClient.auth.onAuthStateChange((event, session) => {
         currentUser = session?.user || null;
+    window.currentUser = currentUser;
         callback(event, session);
     });
 }
@@ -146,23 +149,55 @@ async function getProfile() {
     return data;
 }
 
+function isUUID(str) {
+    return typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
+function generateUUID() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 async function loadPortfolioAssets() {
-    if (!currentUser) return null;
-    const { data, error } = await supabaseClient
-        .from('portfolio_assets')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: true });
-    if (error) throw error;
-    return data || [];
+    if (!currentUser && window.currentUser) currentUser = window.currentUser;
+    if (!currentUser || !supabaseClient) return null;
+    try {
+        const { data, error } = await supabaseClient
+            .from('portfolio_assets')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: true });
+        if (error) {
+            console.warn('Supabase loadPortfolioAssets error:', error.message);
+            return null;
+        }
+        return data || [];
+    } catch (e) {
+        console.warn('Supabase loadPortfolioAssets catch:', e.message);
+        return null;
+    }
 }
 
 async function savePortfolioAsset(asset) {
+    if (!currentUser && window.currentUser) currentUser = window.currentUser;
     if (!currentUser || !supabaseClient) return null;
     try {
+        const assetId = isUUID(asset.id) ? asset.id : generateUUID();
         const payload = {
-            ...asset,
+            id: assetId,
             user_id: currentUser.id,
+            type: asset.type || 'cash',
+            symbol: (asset.symbol || '').toUpperCase().trim(),
+            name: (asset.name || '').trim(),
+            amount: Number(asset.amount) || 0,
+            buy_price: Number(asset.buy_price) || 0,
+            current_price: Number(asset.current_price) || Number(asset.buy_price) || 0,
+            currency: asset.currency || 'KRW',
             updated_at: new Date().toISOString()
         };
         const { data, error } = await supabaseClient
@@ -182,7 +217,9 @@ async function savePortfolioAsset(asset) {
 }
 
 async function deletePortfolioAssetFromDB(assetId) {
+    if (!currentUser && window.currentUser) currentUser = window.currentUser;
     if (!currentUser || !supabaseClient) return;
+    if (!isUUID(assetId)) return;
     try {
         const { error } = await supabaseClient
             .from('portfolio_assets')

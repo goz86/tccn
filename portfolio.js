@@ -209,17 +209,66 @@ window.convertFromUSD = function () {
     }
 };
 
-// Load Portfolio Data
+function isValidUUID(str) {
+    return typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
+function generateAssetUUID() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+function getPortfolioStorageKey() {
+    const uid = window.currentUser?.id || 'guest';
+    return 'goz_portfolio_assets_' + uid;
+}
+
+function savePortfolioToLocal() {
+    try {
+        const key = getPortfolioStorageKey();
+        localStorage.setItem(key, JSON.stringify(portfolioAssets));
+        localStorage.setItem('goz_portfolio_assets', JSON.stringify(portfolioAssets));
+    } catch (e) {}
+}
+
+// Reset portfolio display on user signout
+window.resetPortfolioForLogout = function () {
+    portfolioAssets = DEFAULT_PORTFOLIO_ASSETS;
+    renderPortfolio();
+    updateOverviewCards();
+};
+
+// Load Portfolio Data with Account-specific Sync
 async function loadPortfolioData() {
-    const local = localStorage.getItem('goz_portfolio_assets');
+    const key = getPortfolioStorageKey();
+    const local = localStorage.getItem(key) || localStorage.getItem('goz_portfolio_assets');
+    let hasLoadedLocal = false;
+
     if (local) {
         try {
             portfolioAssets = JSON.parse(local);
+            hasLoadedLocal = true;
         } catch (e) {
-            portfolioAssets = DEFAULT_PORTFOLIO_ASSETS;
+            portfolioAssets = window.currentUser ? [] : DEFAULT_PORTFOLIO_ASSETS;
         }
     } else {
-        portfolioAssets = DEFAULT_PORTFOLIO_ASSETS;
+        portfolioAssets = window.currentUser ? [] : DEFAULT_PORTFOLIO_ASSETS;
+    }
+
+    // Ensure all items have valid UUIDs
+    let hasUpdatedIds = false;
+    portfolioAssets.forEach(a => {
+        if (!isValidUUID(a.id)) {
+            a.id = generateAssetUUID();
+            hasUpdatedIds = true;
+        }
+    });
+    if (hasUpdatedIds && hasLoadedLocal) {
         savePortfolioToLocal();
     }
 
@@ -249,17 +298,21 @@ async function loadPortfolioData() {
         pBtn.setAttribute('title', isPrivacyMode ? 'Đang khóa bảo mật số dư (Bấm để mở)' : 'Khóa bảo mật số dư (Bấm để ẩn)');
     }
 
-    // Sync from Supabase if logged in
+    // Sync from Supabase Cloud if user is logged in
     if (window.currentUser && typeof window.loadPortfolioAssets === 'function') {
         try {
             const dbAssets = await window.loadPortfolioAssets();
-            if (dbAssets && dbAssets.length > 0) {
+            if (Array.isArray(dbAssets) && dbAssets.length > 0) {
+                // Cloud has assets for this account
                 portfolioAssets = dbAssets;
                 savePortfolioToLocal();
             } else if (portfolioAssets.length > 0) {
+                // Migrate local assets to Cloud on first sync for this account
                 for (const a of portfolioAssets) {
+                    if (!isValidUUID(a.id)) a.id = generateAssetUUID();
                     await window.savePortfolioAsset(a);
                 }
+                savePortfolioToLocal();
             }
         } catch (err) {
             console.warn('Supabase portfolio load error:', err.message);
@@ -271,10 +324,7 @@ async function loadPortfolioData() {
     refreshCryptoPrices();
     refreshStockPrices();
 }
-
-function savePortfolioToLocal() {
-    localStorage.setItem('goz_portfolio_assets', JSON.stringify(portfolioAssets));
-}
+window.loadPortfolioData = loadPortfolioData;
 
 // Live Prices from Binance for Any Crypto in Portfolio
 async function refreshCryptoPrices() {
@@ -1304,8 +1354,9 @@ window.saveCryptoAsset = async function () {
         return;
     }
 
+    const assetId = isValidUUID(editId) ? editId : generateAssetUUID();
     const assetData = {
-        id: editId || 'crypto_' + Date.now(),
+        id: assetId,
         type: 'crypto',
         symbol,
         name,
@@ -1318,14 +1369,17 @@ window.saveCryptoAsset = async function () {
     if (editId) {
         const idx = portfolioAssets.findIndex(a => a.id === editId);
         if (idx !== -1) portfolioAssets[idx] = assetData;
+        else portfolioAssets.push(assetData);
     } else {
         portfolioAssets.push(assetData);
     }
 
     savePortfolioToLocal();
+    let cloudSynced = false;
     if (window.currentUser && typeof window.savePortfolioAsset === 'function') {
         try {
-            await window.savePortfolioAsset(assetData);
+            const saved = await window.savePortfolioAsset(assetData);
+            if (saved) cloudSynced = true;
         } catch (e) {
             console.warn('Supabase save error:', e.message);
         }
@@ -1478,8 +1532,9 @@ window.saveStockAsset = async function () {
         return;
     }
 
+    const assetId = isValidUUID(editId) ? editId : generateAssetUUID();
     const assetData = {
-        id: editId || 'stock_' + Date.now(),
+        id: assetId,
         type: 'stock_vn',
         symbol,
         name,
@@ -1492,14 +1547,17 @@ window.saveStockAsset = async function () {
     if (editId) {
         const idx = portfolioAssets.findIndex(a => a.id === editId);
         if (idx !== -1) portfolioAssets[idx] = assetData;
+        else portfolioAssets.push(assetData);
     } else {
         portfolioAssets.push(assetData);
     }
 
     savePortfolioToLocal();
+    let cloudSynced = false;
     if (window.currentUser && typeof window.savePortfolioAsset === 'function') {
         try {
-            await window.savePortfolioAsset(assetData);
+            const saved = await window.savePortfolioAsset(assetData);
+            if (saved) cloudSynced = true;
         } catch (e) {
             console.warn('Supabase save error:', e.message);
         }
@@ -1563,8 +1621,9 @@ window.saveCashAsset = async function () {
         return;
     }
 
+    const assetId = isValidUUID(editId) ? editId : generateAssetUUID();
     const assetData = {
-        id: editId || 'cash_' + Date.now(),
+        id: assetId,
         type: 'cash',
         symbol: currency,
         name,
@@ -1577,14 +1636,17 @@ window.saveCashAsset = async function () {
     if (editId) {
         const idx = portfolioAssets.findIndex(a => a.id === editId);
         if (idx !== -1) portfolioAssets[idx] = assetData;
+        else portfolioAssets.push(assetData);
     } else {
         portfolioAssets.push(assetData);
     }
 
     savePortfolioToLocal();
+    let cloudSynced = false;
     if (window.currentUser && typeof window.savePortfolioAsset === 'function') {
         try {
-            await window.savePortfolioAsset(assetData);
+            const saved = await window.savePortfolioAsset(assetData);
+            if (saved) cloudSynced = true;
         } catch (e) {
             console.warn('Supabase save error:', e.message);
         }
