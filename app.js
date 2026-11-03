@@ -48,6 +48,40 @@ function loadBudgetRatios() {
 }
 loadBudgetRatios();
 
+function updateRatioLabelsUI() {
+    loadBudgetRatios();
+    const l = budgetRatios.livingPct ?? 40;
+    const r = budgetRatios.reservePct ?? 40;
+    const i = budgetRatios.investPct ?? 20;
+    const ratioStr = `Quy tắc ${l}-${r}-${i}`;
+
+    // 1. Phân Bổ Thực Tế badge
+    const badge = document.getElementById('badgeRuleRatio');
+    if (badge) badge.textContent = ratioStr;
+
+    // 2. Overview Card 2 footer
+    const cardRatio = document.getElementById('incomeRatioText');
+    if (cardRatio) cardRatio.innerHTML = `<i class="icon-svg" data-lucide="trending-up"></i> ${ratioStr}`;
+
+    // 3. Table Headers & Legends
+    const thL = document.getElementById('thLivingPct');
+    const thR = document.getElementById('thReservePct');
+    const thI = document.getElementById('thInvestPct');
+    if (thL) thL.innerHTML = `${l}% <i class="icon-svg" data-lucide="pencil" style="width:10px;height:10px;"></i>`;
+    if (thR) thR.innerHTML = `${r}% <i class="icon-svg" data-lucide="pencil" style="width:10px;height:10px;"></i>`;
+    if (thI) thI.innerHTML = `${i}% <i class="icon-svg" data-lucide="pencil" style="width:10px;height:10px;"></i>`;
+
+    const legL = document.getElementById('legendLiving');
+    const legR = document.getElementById('legendReserve');
+    const legI = document.getElementById('legendInvest');
+    if (legL) legL.textContent = `Sinh hoạt ${l}%`;
+    if (legR) legR.textContent = `Dự phòng ${r}%`;
+    if (legI) legI.textContent = `Đầu tư ${i}%`;
+
+    if (typeof refreshIcons === 'function') refreshIcons();
+}
+window.updateRatioLabelsUI = updateRatioLabelsUI;
+
 function getBudgetAllocation(inc) {
     const living = Math.round(inc * (budgetRatios.livingPct / 100));
     const reserve = Math.round(inc * (budgetRatios.reservePct / 100));
@@ -55,7 +89,7 @@ function getBudgetAllocation(inc) {
     return { living, reserve, invest };
 }
 
-window.openRatioConfigModal = function() {
+window.openRatioConfigModal = function () {
     loadBudgetRatios();
     const elL = document.getElementById('inputLivingPct');
     const elR = document.getElementById('inputReservePct');
@@ -71,7 +105,7 @@ window.openRatioConfigModal = function() {
     }
 };
 
-window.closeRatioConfigModal = function() {
+window.closeRatioConfigModal = function () {
     const modal = document.getElementById('ratioConfigModal');
     if (modal) {
         modal.classList.remove('active');
@@ -79,7 +113,7 @@ window.closeRatioConfigModal = function() {
     }
 };
 
-window.onRatioInputsChange = function() {
+window.onRatioInputsChange = function () {
     const l = parseInt(document.getElementById('inputLivingPct')?.value, 10) || 0;
     const r = parseInt(document.getElementById('inputReservePct')?.value, 10) || 0;
     const i = parseInt(document.getElementById('inputInvestPct')?.value, 10) || 0;
@@ -102,7 +136,7 @@ window.onRatioInputsChange = function() {
     }
 };
 
-window.saveRatioConfig = function() {
+window.saveRatioConfig = function () {
     const l = parseInt(document.getElementById('inputLivingPct')?.value, 10) || 0;
     const r = parseInt(document.getElementById('inputReservePct')?.value, 10) || 0;
     const i = parseInt(document.getElementById('inputInvestPct')?.value, 10) || 0;
@@ -112,9 +146,10 @@ window.saveRatioConfig = function() {
     }
     budgetRatios = { livingPct: l, reservePct: r, investPct: i };
     localStorage.setItem('goz_budget_ratios', JSON.stringify(budgetRatios));
+    updateRatioLabelsUI();
     closeRatioConfigModal();
     renderAll();
-    showToast('Đã cập nhật tỷ lệ phân bổ ngân sách mới!', 'success');
+    showToast(`Đã lưu tỷ lệ mới: Quy tắc ${l}-${r}-${i}!`, 'success');
 };
 
 function applyDemoBudgetIfEmpty(data) {
@@ -184,28 +219,28 @@ function checkPinState() {
     const title = document.getElementById('pinTitle');
     const sub = document.getElementById('pinSubtitle');
     const btnFor = document.getElementById('pinForgotBtn');
-    
+
     currentPinInput = '';
     updatePinDots();
     updatePinToggleUI();
-    
+
     // If PIN is disabled, skip the lock screen
     if (!pinEnabled) {
         overlay.classList.add('hidden');
         return;
     }
-    
+
     if (appPin) {
         overlay.classList.remove('hidden');
         title.textContent = 'Nhập mã PIN';
         sub.textContent = 'Bảo mật sổ cái tài chính của bạn';
-        if(btnFor) btnFor.style.visibility = 'visible';
+        if (btnFor) btnFor.style.visibility = 'visible';
         pinSetupStep = 0;
     } else {
         overlay.classList.remove('hidden');
         title.textContent = 'Tạo mã PIN mới';
         sub.textContent = 'Dùng để khóa ứng dụng lần sau';
-        if(btnFor) btnFor.style.visibility = 'hidden';
+        if (btnFor) btnFor.style.visibility = 'hidden';
         pinSetupStep = 1;
     }
 }
@@ -230,7 +265,7 @@ function handlePinKey(key) {
         }
     }
     updatePinDots();
-    
+
     if (currentPinInput.length === 4) {
         setTimeout(() => processPinBlock(), 50);
     }
@@ -238,7 +273,7 @@ function handlePinKey(key) {
 
 function processPinBlock() {
     const dotsContainer = document.getElementById('pinDots');
-    
+
     if (pinSetupStep === 1) {
         tempPin = currentPinInput;
         currentPinInput = '';
@@ -393,6 +428,7 @@ function updatePinToggleUI() {
 
 function init() {
     applyTheme();
+    updateRatioLabelsUI();
     initSupabase();
     onAuthStateChange(handleAuthChange);
     checkSession();
@@ -449,17 +485,17 @@ async function showApp() {
         savingsGoals = [];
     }
 
-function setDefaultDate() {
-    const now = new Date();
-    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-    const dayName = days[now.getDay()];
-    const formatted = `${dayName}, ${now.getDate()} tháng ${now.getMonth() + 1}, ${now.getFullYear()}`;
+    function setDefaultDate() {
+        const now = new Date();
+        const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const dayName = days[now.getDay()];
+        const formatted = `${dayName}, ${now.getDate()} tháng ${now.getMonth() + 1}, ${now.getFullYear()}`;
 
-    const dateMobile = document.getElementById('currentDate');
-    const dateDesktop = document.getElementById('currentDateDesktop');
-    if (dateMobile) dateMobile.textContent = formatted;
-    if (dateDesktop) dateDesktop.textContent = formatted;
-}
+        const dateMobile = document.getElementById('currentDate');
+        const dateDesktop = document.getElementById('currentDateDesktop');
+        if (dateMobile) dateMobile.textContent = formatted;
+        if (dateDesktop) dateDesktop.textContent = formatted;
+    }
 
     document.getElementById('loadingOverlay').style.display = 'none';
     setDefaultDate();
@@ -473,7 +509,7 @@ function setDefaultDate() {
 function showAuth() {
     document.getElementById('authOverlay').style.display = 'flex';
     const pinOverlay = document.getElementById('pinOverlay');
-    if(pinOverlay) pinOverlay.classList.add('hidden');
+    if (pinOverlay) pinOverlay.classList.add('hidden');
     document.getElementById('loadingOverlay').style.display = 'none';
     document.getElementById('appWrapper').style.display = 'none';
     document.getElementById('authError').textContent = '';
@@ -575,17 +611,40 @@ function setDefaultDate() {
 const TWELVE_DATA_KEY = '56064eb9612446bcb827e837eb814e24';
 
 function updateRateUI(widget, statusEl, usdWidget, usdSubtext, statusLabel) {
-    widget.textContent = exchangeRate.toFixed(2) + ' ₫';
-    statusEl.innerHTML = '<span class="pulse-dot"></span> ' + statusLabel;
-    statusEl.className = 'exchange-status live';
-    document.getElementById('exchangeSubtext').textContent = '1 KRW = ' + exchangeRate.toFixed(2) + ' VND';
-    if (usdWidget) usdWidget.textContent = fmtFull(Math.round(usdRate)) + ' ₫';
-    if (usdSubtext) usdSubtext.textContent = '1 USD = ' + fmtFull(Math.round(usdRate)) + ' VND';
+    window.exchangeRate = exchangeRate;
+    window.usdRate = usdRate;
+
+    const w = widget || document.getElementById('exchangeRateValue');
+    const uW = usdWidget || document.getElementById('usdRateValue');
+    const uSub = usdSubtext || document.getElementById('usdSubtext');
+    const exSub = document.getElementById('exchangeSubtext');
+    const stEl = statusEl || document.getElementById('exchangeStatus');
+
+    if (w) w.textContent = exchangeRate.toFixed(2) + ' đ';
+    if (stEl) {
+        stEl.innerHTML = '<span class="pulse-dot"></span> ' + (statusLabel || 'Realtime');
+        stEl.className = 'badge-realtime';
+    }
+    if (exSub) exSub.textContent = '1 KRW = ' + exchangeRate.toFixed(2) + ' VND';
+    if (uW) uW.textContent = Math.round(usdRate).toLocaleString('vi-VN') + ' đ';
+    if (uSub) uSub.textContent = '1 USD = ' + Math.round(usdRate).toLocaleString('vi-VN') + ' VND';
+
+    const usdKrwVal = (usdRate && exchangeRate) ? (usdRate / exchangeRate) : 1344.1;
+    window.usdKrwRate = usdKrwVal;
+
+    // Header & Subbar live rate chips
+    const hdrKrw = document.getElementById('hdrRateKrw');
+    const hdrUsd = document.getElementById('hdrRateUsd');
+    if (hdrKrw) hdrKrw.textContent = exchangeRate.toFixed(2) + ' đ';
+    if (hdrUsd) hdrUsd.textContent = Math.round(usdRate).toLocaleString('vi-VN') + ' đ';
+
     renderSummary();
-    
-    const usdKrwVal = (usdRate && exchangeRate) ? (usdRate / exchangeRate) : 1430;
+
     // Log and Render Exchange Rate History
     logAndRenderExchangeHistory(exchangeRate, usdRate, usdKrwVal);
+
+    if (typeof window.renderPortfolio === 'function') window.renderPortfolio();
+    if (typeof window.updateOverviewCards === 'function') window.updateOverviewCards();
 }
 
 async function fetchExchangeRate() {
@@ -594,7 +653,32 @@ async function fetchExchangeRate() {
     const usdWidget = document.getElementById('usdRateValue');
     const usdSubtext = document.getElementById('usdSubtext');
 
-    // Source 1: Twelve Data (realtime, limited credits)
+    // Source 1: Open Exchange Rates API (Free, Instantaneous, accurate real-time market cross-rates)
+    try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.rates && data.rates.VND && data.rates.KRW) {
+                const u = parseFloat(data.rates.VND);
+                const uk = parseFloat(data.rates.KRW);
+                const k = u / uk;
+
+                exchangeRate = parseFloat(k.toFixed(2));
+                usdRate = Math.round(u);
+                window.exchangeRate = exchangeRate;
+                window.usdRate = usdRate;
+                window.usdKrwRate = parseFloat(uk.toFixed(1));
+                exchangeStatus = 'live';
+
+                updateRateUI(widget, statusEl, usdWidget, usdSubtext, 'Realtime');
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn('Open.er-api failed, falling back to Twelve Data:', e.message);
+    }
+
+    // Source 2: Twelve Data (Secondary backup)
     try {
         const [krwRes, usdRes] = await Promise.all([
             fetch(`https://api.twelvedata.com/exchange_rate?symbol=KRW/VND&apikey=${TWELVE_DATA_KEY}`),
@@ -605,42 +689,27 @@ async function fetchExchangeRate() {
         if (krwData.rate && usdData.rate && !krwData.code) {
             exchangeRate = parseFloat(krwData.rate);
             usdRate = parseFloat(usdData.rate);
+            window.exchangeRate = exchangeRate;
+            window.usdRate = usdRate;
+            window.usdKrwRate = parseFloat((usdRate / exchangeRate).toFixed(1));
             exchangeStatus = 'live';
-            updateRateUI(widget, statusEl, usdWidget, usdSubtext, 'Realtime ~33p');
+            updateRateUI(widget, statusEl, usdWidget, usdSubtext, 'Twelve Data');
             return;
         }
-        throw new Error(krwData.message || 'Twelve Data error');
     } catch (e) {
-        console.log('Twelve Data failed:', e.message);
+        console.warn('Twelve Data failed:', e.message);
     }
 
-    // Source 2: ExchangeRate-API (free, daily update)
-    try {
-        const [krwRes, usdRes] = await Promise.all([
-            fetch('https://open.er-api.com/v6/latest/KRW'),
-            fetch('https://open.er-api.com/v6/latest/USD')
-        ]);
-        if (!krwRes.ok || !usdRes.ok) throw new Error('API error');
-        const krwData = await krwRes.json();
-        const usdData = await usdRes.json();
-        exchangeRate = krwData.rates.VND;
-        usdRate = usdData.rates.VND;
-        exchangeStatus = 'live';
-        updateRateUI(widget, statusEl, usdWidget, usdSubtext, 'Live ~33p');
-        return;
-    } catch (e) {
-        console.log('ExchangeRate-API failed:', e.message);
-    }
-
-    // Source 3: Fallback defaults
-    if (!exchangeRate) { exchangeRate = 18.5; widget.textContent = '18.50 ₫'; document.getElementById('exchangeSubtext').textContent = '1 KRW ≈ 18.50 VND'; }
-    if (!usdRate && usdWidget) { usdRate = 25500; usdWidget.textContent = '25.500 ₫'; if (usdSubtext) usdSubtext.textContent = '1 USD ≈ 25.500 VND'; }
+    // Source 3: Robust Fallback Standard (Realistic current market values)
+    if (!exchangeRate) exchangeRate = 19.15;
+    if (!usdRate) usdRate = 25744;
+    window.exchangeRate = exchangeRate;
+    window.usdRate = usdRate;
+    window.usdKrwRate = 1344.1;
     exchangeStatus = 'offline';
-    statusEl.textContent = 'Offline'; statusEl.className = 'exchange-status offline';
 
-    const fallbackUsdKrw = (usdRate && exchangeRate) ? (usdRate / exchangeRate) : 1430;
-    // Log and Render Exchange Rate History Chart
-    logAndRenderExchangeHistory(exchangeRate, usdRate, fallbackUsdKrw);
+    const fallbackUsdKrw = (usdRate && exchangeRate) ? (usdRate / exchangeRate) : 1344.1;
+    updateRateUI(widget, statusEl, usdWidget, usdSubtext, 'Offline');
 }
 
 function convertFromKRW() {
@@ -675,6 +744,7 @@ function convertFromUSD() {
 }
 
 function renderAll() {
+    updateRatioLabelsUI();
     renderSummary();
     renderFinancialInsight();
     renderBudgetHealth();
@@ -688,6 +758,7 @@ function renderAll() {
         initScrollReveal();
     });
 }
+window.renderAll = renderAll;
 
 function renderWithoutTable() {
     renderSummary();
@@ -773,7 +844,7 @@ function getAllTimeTotals() {
             const balance = income - expense;
             if (balance > 0) {
                 // Following the 2/3 of balance strategy for Emergency Fund
-                reserveSum += Math.round(balance * (2/3));
+                reserveSum += Math.round(balance * (2 / 3));
             }
             count++;
         }
@@ -785,6 +856,10 @@ function getAllTimeTotals() {
 
 // ===== Summary (VND cards at top) =====
 function renderSummary() {
+    if (typeof window.updateOverviewCards === 'function') {
+        window.updateOverviewCards();
+        return;
+    }
     const r = exchangeRate || 18.5;
     const u = usdRate || 25500;
     const { incKRW, expKRW, balanceKRW, reserveSum, avgExp } = getAllTimeTotals();
@@ -792,12 +867,12 @@ function renderSummary() {
     const expense = Math.round(expKRW * r);
     const balance = income - expense;
     const rate = income > 0 ? Math.round(((income - expense) / income) * 100) : 0;
-    
+
     animateVal('totalBalance', fmtVND(balance));
     animateVal('totalIncome', fmtVND(income));
     animateVal('totalExpense', fmtVND(expense));
     animateVal('savingsRate', Math.max(0, rate) + '%');
-    
+
     // Update Reserve/Emergency Fund Card with animation
     const resTotal = document.getElementById('reserveTotal');
     const survMonths = document.getElementById('survivalMonths');
@@ -810,13 +885,15 @@ function renderSummary() {
     const balKRW = document.getElementById('balanceKRW');
     const incKRWEl = document.getElementById('incomeKRW');
     const expKRWEl = document.getElementById('expenseKRW');
-    if (balKRW) balKRW.innerHTML = '≈ ' + fmtKRW(balanceKRW) + '<br><span class="sub-currency">≈ $' + fmtFull(Math.round(balanceKRW * r / u)) + '</span>';
-    if (incKRWEl) incKRWEl.innerHTML = '≈ ' + fmtKRW(incKRW) + '<br><span class="sub-currency">≈ $' + fmtFull(Math.round(incKRW * r / u)) + '</span>';
-    if (expKRWEl) expKRWEl.innerHTML = '≈ ' + fmtKRW(expKRW) + '<br><span class="sub-currency">≈ $' + fmtFull(Math.round(expKRW * r / u)) + '</span>';
+    if (balKRW) balKRW.textContent = '';
+    if (incKRWEl) incKRWEl.textContent = '';
+    if (expKRWEl) expKRWEl.textContent = '';
     const sl = document.getElementById('savingsLabel');
-    if (rate >= 50) sl.textContent = 'Xuất sắc'; else if (rate >= 30) sl.textContent = 'Tốt';
-    else if (rate >= 10) sl.textContent = 'Cần cải thiện'; else if (income > 0) sl.textContent = 'Rất ít';
-    else sl.textContent = '--';
+    if (sl) {
+        if (rate >= 50) sl.textContent = 'Xuất sắc'; else if (rate >= 30) sl.textContent = 'Tốt';
+        else if (rate >= 10) sl.textContent = 'Cần cải thiện'; else if (income > 0) sl.textContent = 'Rất ít';
+        else sl.textContent = '--';
+    }
 }
 
 function animateVal(id, val) {
@@ -833,6 +910,7 @@ function animateVal(id, val) {
 function renderFinancialInsight() {
     const card = document.getElementById('financialInsightCard');
     const titleEl = document.getElementById('financialInsightTitle');
+    const badgeEl = document.getElementById('financialInsightBadge');
     const textEl = document.getElementById('financialInsightText');
     const scoreEl = document.getElementById('financialInsightScore');
     if (!card || !titleEl || !textEl || !scoreEl) return;
@@ -845,7 +923,8 @@ function renderFinancialInsight() {
     card.classList.remove('is-strong', 'is-warning', 'is-danger');
 
     if (!income && !expense) {
-        titleEl.textContent = 'Chưa có dữ liệu';
+        titleEl.textContent = 'Gợi Ý Tài Chính';
+        if (badgeEl) badgeEl.textContent = 'Chưa có dữ liệu';
         textEl.textContent = 'Nhập thu nhập và chi tiêu để nhận phân tích tự động.';
         scoreEl.textContent = '--';
         scoreEl.classList.add('health-score-ring');
@@ -863,7 +942,7 @@ function renderFinancialInsight() {
     const livingBudget = Math.round(currentIncome * 0.40);
     const livingDelta = livingBudget - currentExpense;
 
-    let title = 'Dòng tiền cần theo dõi';
+    let title = 'Cần theo dõi';
     let text = 'Chi tiêu đang cao hơn phần còn lại. Hãy rà lại tháng có chi tiêu lớn nhất.';
     let tone = 'is-warning';
 
@@ -872,23 +951,24 @@ function renderFinancialInsight() {
         text = `Tỷ lệ tiết kiệm đạt ${savingsRate}%. Quỹ dự phòng hiện đủ khoảng ${survivalMonths ? survivalMonths.toFixed(1) : '--'} tháng.`;
         tone = 'is-strong';
     } else if (savingsRate >= 25 && balance > 0) {
-        title = 'Tài chính đang ổn định';
+        title = 'Tài chính ổn định';
         text = `Bạn đang giữ lại ${fmtKRW(balance)} sau chi tiêu. Tiếp tục duy trì nhịp tiết kiệm hiện tại.`;
         tone = 'is-strong';
     } else if (balance < 0) {
-        title = 'Chi tiêu đang vượt thu nhập';
+        title = 'Chi tiêu vượt thu nhập';
         text = `Dòng tiền âm ${fmtKRW(Math.abs(balance))}. Nên giảm các khoản không thiết yếu trong tháng tới.`;
         tone = 'is-danger';
     } else if (currentIncome && livingDelta < 0) {
-        title = 'Sinh hoạt vượt mức 40%';
+        title = 'Sinh hoạt vượt 40%';
         text = `Tháng này chi tiêu sinh hoạt vượt ${fmtKRW(Math.abs(livingDelta))} so với ngưỡng 40%.`;
         tone = 'is-warning';
     }
 
     card.classList.add(tone);
-    titleEl.textContent = title;
+    titleEl.textContent = 'Gợi Ý Tài Chính';
+    if (badgeEl) badgeEl.textContent = title;
     textEl.textContent = text;
-    scoreEl.textContent = `${Math.max(0, savingsRate)}%`;
+    scoreEl.textContent = `Sức khỏe: ${savingsRate >= 50 ? 'A+ (Xuất sắc)' : (savingsRate >= 25 ? 'B (Tốt)' : 'C (Lưu ý)')}`;
 }
 
 function showBudgetTooltip(event, monthIndex, income, expense, balance) {
@@ -1171,7 +1251,19 @@ function renderSavingsGoals() {
 // ===== Budget Table =====
 function getBudgetKey(y, m) { return `${y}-${String(m + 1).padStart(2, '0')}`; }
 
-function changeYear(delta) { budgetYear += delta; document.getElementById('yearLabel').textContent = budgetYear; renderAll(); }
+function changeYear(delta) {
+    budgetYear += delta;
+    const yl = document.getElementById('yearLabel');
+    if (yl) yl.textContent = budgetYear;
+    const oyl = document.getElementById('overviewYearLabel');
+    if (oyl) oyl.textContent = budgetYear;
+    const cyl = document.getElementById('chartYearTitle');
+    if (cyl) cyl.textContent = budgetYear;
+    const pyl = document.getElementById('pieYearLabel');
+    if (pyl) pyl.textContent = budgetYear;
+    renderAll();
+}
+window.changeYear = changeYear;
 
 function onIncomeInput(month, value) {
     const key = getBudgetKey(budgetYear, month);
@@ -1215,7 +1307,7 @@ function updateRowInline(month) {
     const inc = Number(data.income || 0), exp = Number(data.expense || 0);
     const { living, reserve, invest } = getBudgetAllocation(inc);
     const balance = inc - exp, surplus = living - exp;
-    const reserveFromBalance = Math.round(balance * (2/3));
+    const reserveFromBalance = Math.round(balance * (2 / 3));
     const investFromBalance = balance - reserveFromBalance;
     const bC = balance >= 0 ? 'positive' : 'negative', sC = surplus >= 0 ? 'positive' : 'negative';
     const reserveDisplay = inc ? `${fmtFull(reserve)}<span class="cell-new-val">/ ${fmtFull(reserveFromBalance)}</span>` : '-';
@@ -1261,7 +1353,7 @@ function updateTableFooter() {
         const inc = Number(data.income || 0), exp = Number(data.expense || 0);
         const { living, reserve, invest } = getBudgetAllocation(inc);
         const balance = inc - exp, surplus = living - exp;
-        const reserveFromBalance = Math.round(balance * (2/3));
+        const reserveFromBalance = Math.round(balance * (2 / 3));
         const investFromBalance = balance - reserveFromBalance;
         tI += inc; tL += living; tR += reserve; tV += invest; tE += exp; tS += surplus;
         tRnew += (inc || exp) ? reserveFromBalance : 0;
@@ -1334,7 +1426,7 @@ function renderMonthlyBudgetTable() {
         const inc = Number(data.income || 0), exp = Number(data.expense || 0);
         const { living, reserve, invest } = getBudgetAllocation(inc);
         const balance = inc - exp, surplus = living - exp;
-        const reserveFromBalance = Math.round(balance * (2/3));
+        const reserveFromBalance = Math.round(balance * (2 / 3));
         const investFromBalance = balance - reserveFromBalance;
         tI += inc; tL += living; tR += reserve; tV += invest; tE += exp; tS += surplus;
         tRnew += (inc || exp) ? reserveFromBalance : 0;
@@ -1519,9 +1611,10 @@ function renderBudgetOverviewChart() {
         const balance = inc - exp;
 
         if (inc || exp) hasData = true;
-        allocations.living += Math.round(inc * 0.40);
-        allocations.reserve += Math.round(inc * 0.40);
-        allocations.invest += Math.round(inc * 0.20);
+        const alloc = getBudgetAllocation(inc);
+        allocations.living += alloc.living;
+        allocations.reserve += alloc.reserve;
+        allocations.invest += alloc.invest;
         series.income.push(inc);
         series.expense.push(exp);
         series.balance.push(balance);
@@ -1593,42 +1686,134 @@ function renderBudgetOverviewChart() {
         `<text x="${xPos(i)}" y="${H - 10}" text-anchor="middle" class="budget-flow-x-label">${label}</text>`
     )).join('');
 
-    const flowSeries = [
-        { key: 'income', cls: 'income', data: series.income },
-        { key: 'expense', cls: 'expense', data: series.expense },
-        { key: 'balance', cls: 'balance', data: series.balance },
-    ];
+    const chartMode = window.chartViewMode || 'combo'; // 'combo', 'bar', 'line'
 
-    let shapesSvg = '';
+    let defsSvg = `
+        <defs>
+            <linearGradient id="flowGradIncBar" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.95"/>
+                <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.8"/>
+            </linearGradient>
+            <linearGradient id="flowGradExpBar" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fb7185" stop-opacity="0.95"/>
+                <stop offset="100%" stop-color="#e11d48" stop-opacity="0.8"/>
+            </linearGradient>
+            <linearGradient id="flowGradIncArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.01"/>
+            </linearGradient>
+            <linearGradient id="flowGradExpArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fb7185" stop-opacity="0.22"/>
+                <stop offset="100%" stop-color="#fb7185" stop-opacity="0.01"/>
+            </linearGradient>
+            <linearGradient id="flowGradBalArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.2"/>
+                <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0.01"/>
+            </linearGradient>
+        </defs>
+    `;
+
+    let contentSvg = '';
     let dotsSvg = '';
     let labelsSvg = '';
     let hitSvg = '';
 
-    flowSeries.forEach(cfg => {
-        const vals = cfg.data;
-        const points = vals.map((value, index) => pointFor(value, index));
-        const pathD = makeSmoothPath(points);
+    if (chartMode === 'bar') {
+        // CỘT ĐÔI: Thu nhập (xanh) & Chi tiêu (đỏ) đặt cạnh nhau từng tháng
+        const barW = 15;
+        const gap = 4;
+        for (let i = 0; i < 12; i++) {
+            const inc = series.income[i];
+            const exp = series.expense[i];
+            const cx = xPos(i);
 
-        if (cfg.key !== 'balance') {
-            shapesSvg += `<path class="budget-flow-area budget-flow-area-${cfg.cls}" d="${areaPath(points)}"/>`;
-        }
-        shapesSvg += `<path class="budget-flow-line budget-flow-line-${cfg.cls}" d="${pathD}"/>`;
+            if (inc > 0) {
+                const yI = yPos(inc);
+                const hI = Math.max(3, Math.abs(zeroY - yI));
+                const xI = cx - barW - gap / 2;
+                contentSvg += `<rect x="${xI}" y="${Math.min(yI, zeroY)}" width="${barW}" height="${hI}" rx="4" ry="4" fill="url(#flowGradIncBar)" class="budget-chart-bar-inc"/>`;
+                labelsSvg += `<text x="${xI + barW / 2}" y="${yI - 6}" text-anchor="middle" class="budget-flow-value budget-flow-value-income">${fmtCompact(inc)}</text>`;
+            }
 
-        const nonZeroIndexes = vals.map((value, index) => value !== 0 ? index : -1).filter(index => index >= 0);
-        const latestIndex = nonZeroIndexes.length ? nonZeroIndexes[nonZeroIndexes.length - 1] : -1;
-        const peakIndex = vals.indexOf(Math.max(...vals));
-
-        for (let i = 0; i < vals.length; i++) {
-            if (vals[i] === 0 && !series.income[i] && !series.expense[i]) continue;
-            const point = points[i];
-            const isKeyPoint = i === latestIndex || (cfg.key === 'income' && i === peakIndex);
-            dotsSvg += `<circle cx="${point.x}" cy="${point.y}" r="${isKeyPoint ? 4.6 : 3.5}" class="budget-flow-dot budget-flow-dot-${cfg.cls}"/>`;
-            if (vals[i] !== 0) {
-                const labelY = cfg.key === 'balance' ? point.y + 16 : (cfg.key === 'expense' ? point.y - 8 : point.y - 12);
-                labelsSvg += `<text x="${Math.min(W - 34, Math.max(34, point.x))}" y="${Math.max(14, Math.min(H - 14, labelY))}" text-anchor="middle" class="budget-flow-value budget-flow-value-${cfg.cls}">${fmtCompact(vals[i])}</text>`;
+            if (exp > 0) {
+                const yE = yPos(exp);
+                const hE = Math.max(3, Math.abs(zeroY - yE));
+                const xE = cx + gap / 2;
+                contentSvg += `<rect x="${xE}" y="${Math.min(yE, zeroY)}" width="${barW}" height="${hE}" rx="4" ry="4" fill="url(#flowGradExpBar)" class="budget-chart-bar-exp"/>`;
+                labelsSvg += `<text x="${xE + barW / 2}" y="${yE - 6}" text-anchor="middle" class="budget-flow-value budget-flow-value-expense">${fmtCompact(exp)}</text>`;
             }
         }
-    });
+    } else if (chartMode === 'combo') {
+        // KẾT HỢP: Cột đôi Thu nhập & Chi tiêu + Đường cong Còn lại (Lợi nhuận tích lũy) chạy vắt ngang qua
+        const barW = 13;
+        const gap = 3;
+        for (let i = 0; i < 12; i++) {
+            const inc = series.income[i];
+            const exp = series.expense[i];
+            const cx = xPos(i);
+
+            if (inc > 0) {
+                const yI = yPos(inc);
+                const hI = Math.max(3, Math.abs(zeroY - yI));
+                const xI = cx - barW - gap / 2;
+                contentSvg += `<rect x="${xI}" y="${Math.min(yI, zeroY)}" width="${barW}" height="${hI}" rx="3" ry="3" fill="url(#flowGradIncBar)" opacity="0.88" class="budget-chart-bar-inc"/>`;
+            }
+
+            if (exp > 0) {
+                const yE = yPos(exp);
+                const hE = Math.max(3, Math.abs(zeroY - yE));
+                const xE = cx + gap / 2;
+                contentSvg += `<rect x="${xE}" y="${Math.min(yE, zeroY)}" width="${barW}" height="${hE}" rx="3" ry="3" fill="url(#flowGradExpBar)" opacity="0.88" class="budget-chart-bar-exp"/>`;
+            }
+        }
+
+        // Overlay smooth curve for Balance (Còn lại / Lợi nhuận)
+        const balPoints = series.balance.map((v, i) => pointFor(v, i));
+        const balPath = makeSmoothPath(balPoints);
+        contentSvg += `<path class="budget-flow-area" fill="url(#flowGradBalArea)" d="${areaPath(balPoints)}"/>`;
+        contentSvg += `<path class="budget-flow-line budget-flow-line-balance" d="${balPath}" stroke-width="3.5"/>`;
+
+        for (let i = 0; i < 12; i++) {
+            if (series.income[i] || series.expense[i] || series.balance[i]) {
+                const pt = balPoints[i];
+                dotsSvg += `<circle cx="${pt.x}" cy="${pt.y}" r="4.6" class="budget-flow-dot budget-flow-dot-balance"/>`;
+                labelsSvg += `<text x="${pt.x}" y="${pt.y - 10}" text-anchor="middle" class="budget-flow-value budget-flow-value-balance">${fmtCompact(series.balance[i])}</text>`;
+            }
+        }
+    } else {
+        // ĐƯỜNG CONG (Line mode): 3 đường spline mềm mại
+        const flowSeries = [
+            { key: 'income', cls: 'income', data: series.income },
+            { key: 'expense', cls: 'expense', data: series.expense },
+            { key: 'balance', cls: 'balance', data: series.balance },
+        ];
+
+        flowSeries.forEach(cfg => {
+            const vals = cfg.data;
+            const points = vals.map((value, index) => pointFor(value, index));
+            const pathD = makeSmoothPath(points);
+
+            if (cfg.key !== 'balance') {
+                contentSvg += `<path class="budget-flow-area budget-flow-area-${cfg.cls}" d="${areaPath(points)}"/>`;
+            }
+            contentSvg += `<path class="budget-flow-line budget-flow-line-${cfg.cls}" d="${pathD}"/>`;
+
+            const nonZeroIndexes = vals.map((value, index) => value !== 0 ? index : -1).filter(index => index >= 0);
+            const latestIndex = nonZeroIndexes.length ? nonZeroIndexes[nonZeroIndexes.length - 1] : -1;
+            const peakIndex = vals.indexOf(Math.max(...vals));
+
+            for (let i = 0; i < vals.length; i++) {
+                if (vals[i] === 0 && !series.income[i] && !series.expense[i]) continue;
+                const point = points[i];
+                const isKeyPoint = i === latestIndex || (cfg.key === 'income' && i === peakIndex);
+                dotsSvg += `<circle cx="${point.x}" cy="${point.y}" r="${isKeyPoint ? 4.6 : 3.5}" class="budget-flow-dot budget-flow-dot-${cfg.cls}"/>`;
+                if (vals[i] !== 0) {
+                    const labelY = cfg.key === 'balance' ? point.y + 16 : (cfg.key === 'expense' ? point.y - 8 : point.y - 12);
+                    labelsSvg += `<text x="${Math.min(W - 34, Math.max(34, point.x))}" y="${Math.max(14, Math.min(H - 14, labelY))}" text-anchor="middle" class="budget-flow-value budget-flow-value-${cfg.cls}">${fmtCompact(vals[i])}</text>`;
+                }
+            }
+        });
+    }
 
     let curMonthSvg = '';
     if (budgetYear === new Date().getFullYear()) {
@@ -1639,7 +1824,7 @@ function renderBudgetOverviewChart() {
     for (let index = 0; index < labels.length; index++) {
         if (!series.income[index] && !series.expense[index]) continue;
         const x = xPos(index);
-        hitSvg += `<circle cx="${x}" cy="${pad.top + cH / 2}" r="24" class="budget-flow-hit"
+        hitSvg += `<circle cx="${x}" cy="${pad.top + cH / 2}" r="28" class="budget-flow-hit"
             onmousemove="showBudgetTooltip(event, ${index}, ${series.income[index]}, ${series.expense[index]}, ${series.balance[index]})"
             onmouseleave="hideBudgetTooltip()"></circle>`;
     }
@@ -1651,19 +1836,20 @@ function renderBudgetOverviewChart() {
             <span class="balance">Còn lại</span>
         </div>
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="line-chart-svg budget-flow-svg" role="img" aria-label="Biểu đồ thu nhập, chi tiêu và còn lại theo tháng">
+            ${defsSvg}
             ${gridSvg}
             ${xLabels}
             ${curMonthSvg}
-            ${shapesSvg}
+            ${contentSvg}
             ${dotsSvg}
             ${labelsSvg}
             ${hitSvg}
         </svg>
         <div class="budget-chart-tooltip" id="budgetChartTooltip"></div>
         <div class="budget-flow-allocation">
-            <span>Sinh hoạt 40% <strong>${fmtCompact(allocations.living)}</strong></span>
-            <span>Dự phòng 40% <strong>${fmtCompact(allocations.reserve)}</strong></span>
-            <span>Đầu tư 20% <strong>${fmtCompact(allocations.invest)}</strong></span>
+            <span>Sinh hoạt ${budgetRatios.livingPct}% <strong>${fmtCompact(allocations.living)}</strong></span>
+            <span>Dự phòng ${budgetRatios.reservePct}% <strong>${fmtCompact(allocations.reserve)}</strong></span>
+            <span>Đầu tư ${budgetRatios.investPct}% <strong>${fmtCompact(allocations.invest)}</strong></span>
         </div>
     </div>`;
 }
@@ -1689,8 +1875,16 @@ function closeChartFullscreen(e) {
 
 // ===== Pie Charts =====
 function renderPieCharts() {
-    document.getElementById('pieYearLabel').textContent = budgetYear;
-    
+    const pyl = document.getElementById('pieYearLabel');
+    if (pyl) pyl.textContent = budgetYear;
+    const oyl = document.getElementById('overviewYearLabel');
+    if (oyl) oyl.textContent = budgetYear;
+    const cyl = document.getElementById('chartYearTitle');
+    if (cyl) cyl.textContent = budgetYear;
+
+    const restPct = (budgetRatios.reservePct + budgetRatios.investPct) || 60;
+    const resRatio = budgetRatios.reservePct / restPct;
+
     // 1. Calculate Yearly Data
     let yInc = 0, yExp = 0;
     for (let m = 0; m < 12; m++) {
@@ -1700,9 +1894,9 @@ function renderPieCharts() {
         yExp += Number(data.expense || 0);
     }
     const yBal = Math.max(0, yInc - yExp);
-    const yRes = Math.round(yBal * (2/3));
-    const yInv = yBal - yRes;
-    
+    const yRes = Math.round(yBal * resRatio);
+    const yInv = Math.max(0, yBal - yRes);
+
     // 2. Calculate All-Time Data
     let aInc = 0, aExp = 0;
     Object.values(monthlyBudget).forEach(b => {
@@ -1710,8 +1904,8 @@ function renderPieCharts() {
         aExp += Number(b.expense || 0);
     });
     const aBal = Math.max(0, aInc - aExp);
-    const aRes = Math.round(aBal * (2/3));
-    const aInv = aBal - aRes;
+    const aRes = Math.round(aBal * resRatio);
+    const aInv = Math.max(0, aBal - aRes);
 
     const yearlyData = [
         { label: 'Chi tiêu', value: yExp, color: '#e74c3c' },
@@ -1742,7 +1936,7 @@ function getPieLegendHTML(data) {
 function drawPie(containerId, data) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    
+
     const total = data.reduce((sum, item) => sum + item.value, 0);
     if (total <= 0) {
         container.innerHTML = '<div class="pie-empty">Chưa có dữ liệu</div>';
@@ -1755,7 +1949,7 @@ function drawPie(containerId, data) {
     data.forEach(slice => {
         const percent = slice.value / total;
         if (percent === 0) return;
-        
+
         // If one slice is 100%, draw a full circle
         if (percent === 1) {
             svg += `<circle cx="0" cy="0" r="1" fill="${slice.color}" class="pie-slice"><title>${slice.label}: 100%</title></circle>`;
@@ -1764,19 +1958,19 @@ function drawPie(containerId, data) {
 
         const startX = Math.cos(2 * Math.PI * cumulativePercent);
         const startY = Math.sin(2 * Math.PI * cumulativePercent);
-        
+
         cumulativePercent += percent;
-        
+
         const endX = Math.cos(2 * Math.PI * cumulativePercent);
         const endY = Math.sin(2 * Math.PI * cumulativePercent);
         const largeArcFlag = percent > 0.5 ? 1 : 0;
-        
+
         const pathData = [
             `M ${startX} ${startY}`, // Move to edge
             `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`, // Draw arc
             `L 0 0`, // Line to center
         ].join(' ');
-        
+
         svg += `<path d="${pathData}" fill="${slice.color}" class="pie-slice"><title>${slice.label}: ${(percent * 100).toFixed(1)}%</title></path>`;
     });
 
@@ -1822,7 +2016,7 @@ function drawAllocationBars(containerId, data) {
     container.innerHTML = `<div class="allocation-bar-chart">${rows}</div>`;
 }
 
-renderPieCharts = function() {
+renderPieCharts = function () {
     const yearLabel = document.getElementById('pieYearLabel');
     if (yearLabel) yearLabel.textContent = budgetYear;
 
@@ -1880,22 +2074,22 @@ function exportToCSV() {
 
         // Sort keys chronologically
         const keys = Object.keys(monthlyBudget).sort();
-        
+
         keys.forEach(key => {
             const [y, mStr] = key.split('-');
             const m = parseInt(mStr, 10);
             const data = monthlyBudget[key];
             const inc = Number(data.income || 0);
             const exp = Number(data.expense || 0);
-            
+
             if (inc === 0 && exp === 0) return; // Skip completely empty months
-            
+
             const { living } = getBudgetAllocation(inc);
             const balance = inc - exp;
             const balPositive = Math.max(0, balance);
-            const reserve = Math.round(balPositive * (2/3));
+            const reserve = Math.round(balPositive * (2 / 3));
             const invest = balPositive - reserve;
-            
+
             // Accumulate totals
             totalInc += inc;
             totalLiving += living;
@@ -1903,15 +2097,15 @@ function exportToCSV() {
             totalInvest += invest;
             totalExp += exp;
             totalBalance += balance;
-            
+
             rows.push([
-                y, 
-                `Tháng ${m}`, 
-                inc.toLocaleString('vi-VN'), 
-                living.toLocaleString('vi-VN'), 
-                reserve.toLocaleString('vi-VN'), 
-                invest.toLocaleString('vi-VN'), 
-                exp.toLocaleString('vi-VN'), 
+                y,
+                `Tháng ${m}`,
+                inc.toLocaleString('vi-VN'),
+                living.toLocaleString('vi-VN'),
+                reserve.toLocaleString('vi-VN'),
+                invest.toLocaleString('vi-VN'),
+                exp.toLocaleString('vi-VN'),
                 balance.toLocaleString('vi-VN')
             ]);
         });
@@ -1943,17 +2137,17 @@ function exportToCSV() {
             // Bao bọc các giá trị trong ngoặc kép để tránh dính lỗi
             return r.map(cell => `"${cell}"`).join(',');
         }).join('\n');
-        
+
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
-        
+
         const link = document.createElement('a');
         link.setAttribute('href', url);
         link.setAttribute('download', `TaichinhGOZ_Backup_${new Date().toISOString().slice(0, 10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         showToast('Đã xuất báo cáo CSV thành công!', 'success');
     } catch (err) {
         console.error('Export error:', err);
@@ -2005,7 +2199,7 @@ function registerSW() {
         // Trigger manual update check on focus & visibilitychange (Mobile PWA reopen)
         const checkUpdate = () => {
             if (navigator.onLine && reg) {
-                reg.update().catch(() => {});
+                reg.update().catch(() => { });
             }
         };
 
@@ -2067,12 +2261,12 @@ function switchTab(tabId) {
         return;
     }
     activeTab = tabId;
-    
+
     // Hide all tab panes and show the selected one
     document.querySelectorAll('.tab-pane').forEach(pane => {
         pane.classList.remove('active');
     });
-    
+
     const selectedPane = document.getElementById('tab-' + tabId);
     if (selectedPane) {
         selectedPane.classList.add('active');
@@ -2083,7 +2277,7 @@ function switchTab(tabId) {
             child.style.setProperty('--wi', wi++);
         }
     }
-    
+
     // Update desktop header tabs active state
     document.querySelectorAll('.header-tab-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -2092,7 +2286,7 @@ function switchTab(tabId) {
     if (headerBtn) {
         headerBtn.classList.add('active');
     }
-    
+
     // Update mobile bottom navigation active state
     document.querySelectorAll('.mobile-bottom-nav a').forEach(link => {
         link.classList.remove('active');
@@ -2101,12 +2295,21 @@ function switchTab(tabId) {
     if (mobileBtn) {
         mobileBtn.classList.add('active');
     }
-    
+
     // Defer chart rendering to next animation frame so tab switch paints instantly
     requestAnimationFrame(() => {
         if (tabId === 'overview') {
             renderBudgetOverviewChart();
             renderPieCharts();
+            if (typeof window.refreshCryptoPrices === 'function') window.refreshCryptoPrices();
+            if (typeof window.refreshStockPrices === 'function') window.refreshStockPrices();
+        } else if (tabId === 'assets') {
+            if (typeof window.renderPortfolio === 'function') window.renderPortfolio();
+            if (typeof window.refreshCryptoPrices === 'function') window.refreshCryptoPrices();
+            if (typeof window.refreshStockPrices === 'function') window.refreshStockPrices();
+        } else if (tabId === 'budget') {
+            renderMonthlyBudgetTable();
+            renderBudgetDashboard();
         } else if (tabId === 'exchange') {
             renderExchangeRateChart();
         }
@@ -2114,10 +2317,15 @@ function switchTab(tabId) {
     });
 }
 
+// Expose key render functions globally
+window.renderMonthlyBudgetTable = renderMonthlyBudgetTable;
+window.renderBudgetDashboard = renderBudgetDashboard;
+window.renderBudgetOverviewChart = renderBudgetOverviewChart;
+
 // ===== Exchange Rate History Chart (Multi-Currency: KRW, USD & USD/KRW) =====
 let currentExchangeMode = 'both'; // 'both', 'krw', 'usd', 'usdKrw'
 
-window.setExchangeRateMode = function(mode) {
+window.setExchangeRateMode = function (mode) {
     currentExchangeMode = mode;
     ['btnRateBoth', 'btnRateKRW', 'btnRateUSD', 'btnRateUSDKRW'].forEach(id => {
         const btn = document.getElementById(id);
@@ -2127,7 +2335,7 @@ window.setExchangeRateMode = function(mode) {
     if (mode === 'krw') document.getElementById('btnRateKRW')?.classList.add('active');
     if (mode === 'usd') document.getElementById('btnRateUSD')?.classList.add('active');
     if (mode === 'usdKrw') document.getElementById('btnRateUSDKRW')?.classList.add('active');
-    
+
     renderExchangeRateChart();
 };
 
@@ -2145,18 +2353,25 @@ function updateExchangeHistoryData(krw, usd, usdKrw) {
         if (stored) {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed)) {
-                history = parsed.filter(item => item && item.date);
+                // Filter out corrupted legacy mock values (where usd > 26100 or krw < 18.8 or usdKrw > 1400)
+                history = parsed.filter(item => {
+                    if (!item || !item.date) return false;
+                    if (item.usd && item.usd > 26100) return false;
+                    if (item.krw && item.krw < 18.8) return false;
+                    if (item.usdKrw && item.usdKrw > 1400) return false;
+                    return true;
+                });
             }
         }
     } catch (e) {
         console.error('Error reading multi rate history:', e);
     }
-    
+
     const index = history.findIndex(item => item.date === today);
-    const kVal = parseFloat(krw) || (history[index] ? history[index].krw : 18.39);
-    const uVal = parseFloat(usd) || (history[index] ? history[index].usd : 26296);
+    const kVal = parseFloat(krw) || (history[index] ? history[index].krw : 19.15);
+    const uVal = parseFloat(usd) || (history[index] ? history[index].usd : 25744);
     const ukVal = parseFloat(usdKrw) || (history[index] ? history[index].usdKrw : Math.round(uVal / kVal));
-    
+
     if (index !== -1) {
         if (krw) history[index].krw = kVal;
         if (usd) history[index].usd = uVal;
@@ -2164,11 +2379,11 @@ function updateExchangeHistoryData(krw, usd, usdKrw) {
     } else {
         history.push({ date: today, krw: kVal, usd: uVal, usdKrw: ukVal });
     }
-    
+
     if (history.length > 30) {
         history = history.slice(history.length - 30);
     }
-    
+
     localStorage.setItem('exchange_multi_history', JSON.stringify(history));
 }
 
@@ -2181,6 +2396,10 @@ function getMultiExchangeHistoryList(currentKrw, currentUsd, currentUsdKrw) {
             if (Array.isArray(parsed)) {
                 parsed.forEach(item => {
                     if (item && item.date) {
+                        // Purge legacy rates
+                        if (item.usd && item.usd > 26100) return;
+                        if (item.krw && item.krw < 18.8) return;
+                        if (item.usdKrw && item.usdKrw > 1400) return;
                         historyMap[item.date] = {
                             krw: parseFloat(item.krw) || null,
                             usd: parseFloat(item.usd) || null,
@@ -2190,25 +2409,10 @@ function getMultiExchangeHistoryList(currentKrw, currentUsd, currentUsdKrw) {
                 });
             }
         }
-        
-        // Backward compatibility migration
-        const dualStored = localStorage.getItem('exchange_dual_history');
-        if (dualStored) {
-            const dualParsed = JSON.parse(dualStored);
-            if (Array.isArray(dualParsed)) {
-                dualParsed.forEach(item => {
-                    if (item && item.date) {
-                        if (!historyMap[item.date]) historyMap[item.date] = {};
-                        if (!historyMap[item.date].krw && item.krw) historyMap[item.date].krw = parseFloat(item.krw);
-                        if (!historyMap[item.date].usd && item.usd) historyMap[item.date].usd = parseFloat(item.usd);
-                    }
-                });
-            }
-        }
-    } catch (e) {}
+    } catch (e) { }
 
-    const baseKrw = parseFloat(currentKrw) || 18.39;
-    const baseUsd = parseFloat(currentUsd) || 26296;
+    const baseKrw = parseFloat(currentKrw) || 19.15;
+    const baseUsd = parseFloat(currentUsd) || 25744;
     const baseUsdKrw = parseFloat(currentUsdKrw) || Math.round(baseUsd / baseKrw);
     const now = new Date();
     const result = [];
@@ -2229,8 +2433,8 @@ function getMultiExchangeHistoryList(currentKrw, currentUsd, currentUsdKrw) {
         } else if (i === 0) {
             kVal = baseKrw;
         } else {
-            const changeK = (pseudoRand - 0.48) * 0.12;
-            kVal = parseFloat((baseKrw + (Math.sin(i * 0.5) * 0.15) + changeK).toFixed(2));
+            const changeK = (pseudoRand - 0.48) * 0.10;
+            kVal = parseFloat((baseKrw + (Math.sin(i * 0.5) * 0.08) + changeK).toFixed(2));
         }
 
         if (historyMap[dateStr] && historyMap[dateStr].usd) {
@@ -2238,8 +2442,8 @@ function getMultiExchangeHistoryList(currentKrw, currentUsd, currentUsdKrw) {
         } else if (i === 0) {
             uVal = baseUsd;
         } else {
-            const changeU = (pseudoRand - 0.5) * 90;
-            uVal = Math.round(baseUsd + (Math.sin(i * 0.4) * 140) + changeU);
+            const changeU = (pseudoRand - 0.5) * 60;
+            uVal = Math.round(baseUsd + (Math.sin(i * 0.4) * 80) + changeU);
         }
 
         if (historyMap[dateStr] && historyMap[dateStr].usdKrw) {
@@ -2247,8 +2451,8 @@ function getMultiExchangeHistoryList(currentKrw, currentUsd, currentUsdKrw) {
         } else if (i === 0) {
             ukVal = baseUsdKrw;
         } else {
-            const changeUK = (pseudoRand - 0.49) * 8;
-            ukVal = Math.round(baseUsdKrw + (Math.cos(i * 0.45) * 12) + changeUK);
+            const changeUK = (pseudoRand - 0.49) * 5;
+            ukVal = Math.round(baseUsdKrw + (Math.cos(i * 0.45) * 8) + changeUK);
         }
 
         historyMap[dateStr] = { krw: kVal, usd: uVal, usdKrw: ukVal };
@@ -2263,7 +2467,7 @@ function getMultiExchangeHistoryList(currentKrw, currentUsd, currentUsdKrw) {
             usdKrw: historyMap[d].usdKrw
         })).slice(-30);
         localStorage.setItem('exchange_multi_history', JSON.stringify(arrayToSave));
-    } catch (e) {}
+    } catch (e) { }
 
     return result;
 }
@@ -2271,46 +2475,46 @@ function getMultiExchangeHistoryList(currentKrw, currentUsd, currentUsdKrw) {
 function renderExchangeRateChart() {
     const container = document.getElementById('exchangeRateHistoryChart');
     if (!container) return;
-    
+
     const width = container.clientWidth || 350;
     const height = container.clientHeight || 280;
     const margin = { top: 35, right: 65, bottom: 40, left: 55 };
-    
-    const curUkVal = (usdRate && exchangeRate) ? (usdRate / exchangeRate) : 1430;
-    const data = getMultiExchangeHistoryList(exchangeRate || 18.39, usdRate || 26296, curUkVal);
-    
+
+    const curUkVal = (usdRate && exchangeRate) ? (usdRate / exchangeRate) : 1344.1;
+    const data = getMultiExchangeHistoryList(exchangeRate || 19.15, usdRate || 25744, curUkVal);
+
     const krwRates = data.map(d => d.krw);
     const usdRates = data.map(d => d.usd);
     const usdKrwRates = data.map(d => d.usdKrw);
-    
+
     let minKrw = Math.min(...krwRates);
     let maxKrw = Math.max(...krwRates);
     let minUsd = Math.min(...usdRates);
     let maxUsd = Math.max(...usdRates);
     let minUk = Math.min(...usdKrwRates);
     let maxUk = Math.max(...usdKrwRates);
-    
+
     // Update KRW, USD & USD/KRW Stat Cards
     const krwCur = document.getElementById('krwHistoryCurrent');
     const krwMax = document.getElementById('krwHistoryMax');
     const krwMin = document.getElementById('krwHistoryMin');
-    if (krwCur) krwCur.textContent = data[data.length - 1].krw.toFixed(2) + ' ₫';
-    if (krwMax) krwMax.textContent = maxKrw.toFixed(2) + ' ₫';
-    if (krwMin) krwMin.textContent = minKrw.toFixed(2) + ' ₫';
+    if (krwCur) krwCur.textContent = data[data.length - 1].krw.toFixed(2) + ' đ';
+    if (krwMax) krwMax.textContent = maxKrw.toFixed(2) + ' đ';
+    if (krwMin) krwMin.textContent = minKrw.toFixed(2) + ' đ';
 
     const usdCur = document.getElementById('usdHistoryCurrent');
     const usdMax = document.getElementById('usdHistoryMax');
     const usdMin = document.getElementById('usdHistoryMin');
-    if (usdCur) usdCur.textContent = fmtFull(Math.round(data[data.length - 1].usd)) + ' ₫';
-    if (usdMax) usdMax.textContent = fmtFull(Math.round(maxUsd)) + ' ₫';
-    if (usdMin) usdMin.textContent = fmtFull(Math.round(minUsd)) + ' ₫';
+    if (usdCur) usdCur.textContent = Math.round(data[data.length - 1].usd).toLocaleString('vi-VN') + ' đ';
+    if (usdMax) usdMax.textContent = Math.round(maxUsd).toLocaleString('vi-VN') + ' đ';
+    if (usdMin) usdMin.textContent = Math.round(minUsd).toLocaleString('vi-VN') + ' đ';
 
     const ukCur = document.getElementById('usdKrwHistoryCurrent');
     const ukMax = document.getElementById('usdKrwHistoryMax');
     const ukMin = document.getElementById('usdKrwHistoryMin');
-    if (ukCur) ukCur.textContent = fmtFull(Math.round(data[data.length - 1].usdKrw)) + ' ₩';
-    if (ukMax) ukMax.textContent = fmtFull(Math.round(maxUk)) + ' ₩';
-    if (ukMin) ukMin.textContent = fmtFull(Math.round(minUk)) + ' ₩';
+    if (ukCur) ukCur.textContent = Math.round(data[data.length - 1].usdKrw).toLocaleString('vi-VN') + ' ₩';
+    if (ukMax) ukMax.textContent = Math.round(maxUk).toLocaleString('vi-VN') + ' ₩';
+    if (ukMin) ukMin.textContent = Math.round(minUk).toLocaleString('vi-VN') + ' ₩';
 
     // Padding bounds for Y axes
     if (minKrw === maxKrw) { minKrw -= 0.5; maxKrw += 0.5; }
@@ -2321,15 +2525,15 @@ function renderExchangeRateChart() {
 
     if (minUk === maxUk) { minUk -= 20; maxUk += 20; }
     else { const padUK = (maxUk - minUk) * 0.25; minUk -= padUK; maxUk += padUK; }
-    
+
     const chartW = width - margin.left - margin.right;
     const chartH = height - margin.top - margin.bottom;
-    
+
     const getX = (idx) => margin.left + (idx / (data.length - 1)) * chartW;
     const getY_KRW = (val) => margin.top + chartH - ((val - minKrw) / (maxKrw - minKrw)) * chartH;
     const getY_USD = (val) => margin.top + chartH - ((val - minUsd) / (maxUsd - minUsd)) * chartH;
     const getY_UK = (val) => margin.top + chartH - ((val - minUk) / (maxUk - minUk)) * chartH;
-    
+
     const showKRW = (currentExchangeMode === 'both' || currentExchangeMode === 'krw');
     const showUSD = (currentExchangeMode === 'both' || currentExchangeMode === 'usd');
     const showUK = (currentExchangeMode === 'both' || currentExchangeMode === 'usdKrw');
@@ -2364,14 +2568,18 @@ function renderExchangeRateChart() {
 
         if (showKRW) {
             svg += `<text class="exchange-chart-label krw" x="${margin.left - 8}" y="${yK + 4}" text-anchor="end" font-size="10" fill="#00b894" font-weight="700">${valK.toFixed(2)}</text>`;
-        }
-        if (showUSD && !showUK) {
+        } else if (currentExchangeMode === 'usd') {
             const yU = getY_USD(valU);
-            svg += `<text class="exchange-chart-label usd" x="${width - margin.right + 8}" y="${yU + 4}" text-anchor="start" font-size="10" fill="#3b82f6" font-weight="700">${fmtFull(Math.round(valU))}</text>`;
-        } else if (showUK) {
+            svg += `<text class="exchange-chart-label usd" x="${margin.left - 8}" y="${yU + 4}" text-anchor="end" font-size="10" fill="#3b82f6" font-weight="700">${Math.round(valU).toLocaleString('vi-VN')} đ</text>`;
+        }
+
+        if (showUK) {
             const valUK = minUk + pct * (maxUk - minUk);
             const yUK = getY_UK(valUK);
-            svg += `<text class="exchange-chart-label usdkrw" x="${width - margin.right + 8}" y="${yUK + 4}" text-anchor="start" font-size="10" fill="#ff9f43" font-weight="700">${fmtFull(Math.round(valUK))}₩</text>`;
+            svg += `<text class="exchange-chart-label usdkrw" x="${width - margin.right + 8}" y="${yUK + 4}" text-anchor="start" font-size="10" fill="#ff9f43" font-weight="700">${Math.round(valUK).toLocaleString('vi-VN')} ₩</text>`;
+        } else if (currentExchangeMode === 'usd') {
+            const yU = getY_USD(valU);
+            svg += `<text class="exchange-chart-label usd" x="${width - margin.right + 8}" y="${yU + 4}" text-anchor="start" font-size="10" fill="#3b82f6" font-weight="700">${Math.round(valU).toLocaleString('vi-VN')} đ</text>`;
         }
         svg += `</g>`;
     }
@@ -2480,18 +2688,18 @@ function renderExchangeRateChart() {
     container.appendChild(tooltip);
 }
 
-window.highlightMultiRatePoint = function(idx, date, krw, usd, usdKrw, x, yK, yU, yUK) {
+window.highlightMultiRatePoint = function (idx, date, krw, usd, usdKrw, x, yK, yU, yUK) {
     const container = document.getElementById('exchangeRateHistoryChart');
     if (!container) return;
     const tooltip = container.querySelector('.rate-tooltip');
     const crosshair = container.querySelector('#rateCrosshair');
-    
+
     if (crosshair) {
         crosshair.setAttribute('x1', x);
         crosshair.setAttribute('x2', x);
         crosshair.style.opacity = '1';
     }
-    
+
     const dotK = container.querySelector('#rateDot-krw-' + idx);
     if (dotK) dotK.setAttribute('r', '6');
     const dotU = container.querySelector('#rateDot-usd-' + idx);
@@ -2517,29 +2725,29 @@ window.highlightMultiRatePoint = function(idx, date, krw, usd, usdKrw, x, yK, yU
                 <span style="background:rgba(255,159,67,0.15); color:#ff9f43; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:800;">USD/KRW</span> 1 USD = ${fmtFull(Math.round(usdKrw))} ₩
             </div>
         `;
-        
+
         const rect = container.getBoundingClientRect();
         let tooltipX = x - 80;
         let tooltipY = Math.min(yK, yU, yUK) - 75;
-        
+
         if (tooltipX < 10) tooltipX = 10;
         if (tooltipX + 180 > rect.width) tooltipX = rect.width - 190;
         if (tooltipY < 10) tooltipY = 10;
-        
+
         tooltip.style.left = `${tooltipX}px`;
         tooltip.style.top = `${tooltipY}px`;
         tooltip.style.opacity = '1';
     }
 };
 
-window.unhighlightMultiRatePoint = function(idx) {
+window.unhighlightMultiRatePoint = function (idx) {
     const container = document.getElementById('exchangeRateHistoryChart');
     if (!container) return;
     const tooltip = container.querySelector('.rate-tooltip');
     const crosshair = container.querySelector('#rateCrosshair');
     if (crosshair) crosshair.style.opacity = '0';
     if (tooltip) tooltip.style.opacity = '0';
-    
+
     const dotK = container.querySelector('#rateDot-krw-' + idx);
     if (dotK) dotK.setAttribute('r', '4');
     const dotU = container.querySelector('#rateDot-usd-' + idx);
@@ -2551,8 +2759,8 @@ window.unhighlightMultiRatePoint = function(idx) {
 window.highlightDualRatePoint = window.highlightMultiRatePoint;
 window.unhighlightDualRatePoint = window.unhighlightMultiRatePoint;
 
-window.showRateTooltip = function(event, date, rate) { };
-window.hideRateTooltip = function() { };
+window.showRateTooltip = function (event, date, rate) { };
+window.hideRateTooltip = function () { };
 
 
 // Init

@@ -146,6 +146,56 @@ async function getProfile() {
     return data;
 }
 
+async function loadPortfolioAssets() {
+    if (!currentUser) return null;
+    const { data, error } = await supabaseClient
+        .from('portfolio_assets')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data || [];
+}
+
+async function savePortfolioAsset(asset) {
+    if (!currentUser || !supabaseClient) return null;
+    try {
+        const payload = {
+            ...asset,
+            user_id: currentUser.id,
+            updated_at: new Date().toISOString()
+        };
+        const { data, error } = await supabaseClient
+            .from('portfolio_assets')
+            .upsert(payload)
+            .select()
+            .single();
+        if (error) {
+            console.warn('Supabase savePortfolioAsset warning:', error.message);
+            return null;
+        }
+        return data;
+    } catch (e) {
+        console.warn('Supabase savePortfolioAsset catch:', e.message);
+        return null;
+    }
+}
+
+async function deletePortfolioAssetFromDB(assetId) {
+    if (!currentUser || !supabaseClient) return;
+    try {
+        const { error } = await supabaseClient
+            .from('portfolio_assets')
+            .delete()
+            .eq('id', assetId)
+            .eq('user_id', currentUser.id);
+        if (error) {
+            console.warn('Supabase deletePortfolioAsset warning:', error.message);
+        }
+    } catch (e) {
+        console.warn('Supabase deletePortfolioAsset catch:', e.message);
+    }
+}
 // ===== Global Export =====
 window.initSupabase = initSupabase;
 window.signUpWithEmail = signUpWithEmail;
@@ -160,3 +210,6 @@ window.loadGoals = loadGoals;
 window.saveGoal = saveGoal;
 window.deleteGoalFromDB = deleteGoalFromDB;
 window.getProfile = getProfile;
+window.loadPortfolioAssets = loadPortfolioAssets;
+window.savePortfolioAsset = savePortfolioAsset;
+window.deletePortfolioAssetFromDB = deletePortfolioAssetFromDB;

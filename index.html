@@ -20,8 +20,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <script>
-        (function() {
-            const CURRENT_VER = 'v56';
+        (function () {
+            const CURRENT_VER = 'v66';
             if (localStorage.getItem('goz_app_ver') !== CURRENT_VER) {
                 localStorage.setItem('goz_app_ver', CURRENT_VER);
                 if ('caches' in window) {
@@ -35,7 +35,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=56">
+    <link rel="stylesheet" href="style.css?v=66">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebApplication","name":"Dashboard Tài Chính","description":"Ứng dụng quản lý thu nhập và chi tiêu cá nhân thông minh","applicationCategory":"FinanceApplication"}
@@ -65,7 +65,8 @@
                 <button class="pin-btn" onclick="handlePinKey('7')">7</button>
                 <button class="pin-btn" onclick="handlePinKey('8')">8</button>
                 <button class="pin-btn" onclick="handlePinKey('9')">9</button>
-                <button class="pin-btn pin-action-btn" onclick="forgotPin()" id="pinForgotBtn" title="Đăng xuất để đặt lại PIN mới">Quên<br>PIN?</button>
+                <button class="pin-btn pin-action-btn" onclick="forgotPin()" id="pinForgotBtn"
+                    title="Đăng xuất để đặt lại PIN mới">Quên<br>PIN?</button>
                 <button class="pin-btn" onclick="handlePinKey('0')">0</button>
                 <button class="pin-btn pin-action-btn" onclick="handlePinKey('backspace')">⌫</button>
             </div>
@@ -93,7 +94,8 @@
                     <input type="password" id="authPassword" placeholder="Tối thiểu 6 ký tự" required minlength="6"
                         autocomplete="current-password">
                 </div>
-                <button type="submit" class="auth-btn primary" id="authSubmitBtn"><i class="icon-svg" data-lucide="key-round"></i> Đăng nhập</button>
+                <button type="submit" class="auth-btn primary" id="authSubmitBtn"><i class="icon-svg"
+                        data-lucide="key-round"></i> Đăng nhập</button>
             </form>
             <div class="auth-divider"><span>hoặc</span></div>
             <button class="auth-btn google" onclick="handleGoogleLogin()">
@@ -124,160 +126,285 @@
     </div>
 
     <div class="app-wrapper" id="appWrapper" style="display:none">
-        <!-- HEADER -->
-        <header class="header" role="banner">
-            <div class="header-content">
-                <div class="header-top-bar">
-                    <div class="header-left">
-                        <div class="brand-mark" aria-hidden="true">
-                            <img src="logo.png" alt="Duhoc Mate Finance Logo" class="brand-logo-img">
-                        </div>
-                        <div>
-                            <h1 class="logo">Duhoc Mate Finance</h1>
-                            <p class="subtitle">Dashboard</p>
-                        </div>
+        <!-- TOP HEADER (UNIFIED DASHBOARD NAVIGATION & CONTROLS) -->
+        <header class="app-top-header" id="appTopHeader" role="banner">
+            <div class="header-inner">
+                <!-- 1. BRAND -->
+                <div class="header-brand" onclick="switchTab('overview')" style="cursor: pointer;"
+                    title="Về trang Tổng Quan">
+                    <div class="brand-avatar">
+                        <img src="logo.png" alt="FinMate Logo" class="brand-logo-img">
                     </div>
-                    
-                    <!-- TOP NAV TABS FOR DESKTOP -->
-                    <nav class="desktop-header-tabs" aria-label="Điều hướng chính">
-                        <button class="header-tab-btn active" onclick="switchTab('overview')" id="h-nav-overview">
-                            <i class="icon-svg" data-lucide="layout-dashboard"></i> <span>Tổng quan</span>
-                        </button>
-                        <button class="header-tab-btn" onclick="switchTab('budget')" id="h-nav-budget">
-                            <i class="icon-svg" data-lucide="calendar-range"></i> <span>Ngân sách 12T</span>
-                        </button>
-                        <button class="header-tab-btn" onclick="switchTab('exchange')" id="h-nav-exchange">
-                            <i class="icon-svg" data-lucide="trending-up"></i> <span>Tỷ giá</span>
-                        </button>
-                        <button class="header-tab-btn" onclick="switchTab('settings')" id="h-nav-settings">
-                            <i class="icon-svg" data-lucide="settings"></i> <span>Cài đặt</span>
-                        </button>
-                    </nav>
-
-                    <div class="header-right header-actions">
-                        <button class="theme-toggle icon-btn" onclick="toggleTheme()" title="Dark/Light Mode"
-                            aria-label="Chuyển theme"><i class="icon-svg" data-lucide="moon"></i></button>
-                        <div class="date-badge desktop-date-badge"><i class="icon-svg" data-lucide="calendar-days"></i><span id="currentDateDesktop"></span></div>
-                        <div class="user-badge" id="userBadge" onclick="switchTab('settings')" style="cursor: pointer;" title="Xem cài đặt tài khoản">
-                            <span class="user-avatar" id="userAvatar" aria-hidden="true"><i class="icon-svg" data-lucide="user-round"></i></span>
-                            <div class="user-info-column">
-                                <span class="user-name" id="userName"></span>
-                            </div>
+                    <div class="brand-text">
+                        <div class="brand-title">
+                            <span>FinMate</span>
+                            <span class="badge-pro">PRO</span>
                         </div>
+                        <span class="brand-subtitle">Quản Trị Tài Chính</span>
                     </div>
                 </div>
 
-                <div class="date-badge-row">
-                    <div class="date-badge mobile-date-badge"><i class="icon-svg" data-lucide="calendar-days"></i><span id="currentDate"></span></div>
+                <!-- 2. MAIN NAV TABS -->
+                <nav class="header-nav-list" aria-label="Menu chính">
+                    <button class="header-nav-item active" onclick="switchTab('overview')" id="h-nav-overview">
+                        <span class="nav-item-icon"><i class="icon-svg" data-lucide="layout-dashboard"></i></span>
+                        <span class="nav-item-label">Tổng Quan</span>
+                        <span class="badge-live-dot">Live</span>
+                    </button>
+                    <button class="header-nav-item" onclick="switchTab('assets')" id="h-nav-assets">
+                        <span class="nav-item-icon"><i class="icon-svg" data-lucide="wallet"></i></span>
+                        <span class="nav-item-label">Quản Trị Tài Sản</span>
+                        <span class="badge-invest-pill">Đầu Tư</span>
+                    </button>
+                    <button class="header-nav-item" onclick="switchTab('budget')" id="h-nav-budget">
+                        <span class="nav-item-icon"><i class="icon-svg" data-lucide="calendar-range"></i></span>
+                        <span class="nav-item-label">Ngân Sách 12 Tháng</span>
+                    </button>
+                    <button class="header-nav-item" onclick="switchTab('exchange')" id="h-nav-exchange">
+                        <span class="nav-item-icon"><i class="icon-svg" data-lucide="trending-up"></i></span>
+                        <span class="nav-item-label">Tỷ Giá & Ngoại Hối</span>
+                    </button>
+                    <button class="header-nav-item" onclick="switchTab('settings')" id="h-nav-settings">
+                        <span class="nav-item-icon"><i class="icon-svg" data-lucide="settings"></i></span>
+                        <span class="nav-item-label">Cài Đặt & Bảo Mật</span>
+                    </button>
+                </nav>
+
+                <!-- 3. RIGHT TOOLS -->
+                <div class="header-tools-right">
+                    <!-- Privacy Mode Toggle (Lock) -->
+                    <button class="privacy-toggle-btn" id="privacyToggleBtn" onclick="togglePrivacyMode()"
+                        title="Khóa bảo mật & Ẩn số dư">
+                        <i class="icon-svg" data-lucide="lock" id="privacyIcon"></i>
+                    </button>
+
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle icon-btn" onclick="toggleTheme()" title="Chuyển chế độ Sáng/Tối"
+                        aria-label="Chuyển theme">
+                        <i class="icon-svg" data-lucide="moon"></i>
+                    </button>
+
+                    <!-- User Profile Badge -->
+                    <div class="user-badge" id="userBadge" onclick="switchTab('settings')" style="cursor: pointer;"
+                        title="Tài khoản & Cài đặt">
+                        <span class="user-avatar" id="userAvatar" aria-hidden="true"><i class="icon-svg"
+                                data-lucide="user-round"></i></span>
+                        <span class="user-name" id="userName">GOZ</span>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <main class="main-content" role="main">
+        <main class="main-content header-layout" role="main">
             <!-- TAB 1: TỔNG QUAN -->
             <div id="tab-overview" class="tab-pane active animate-tab-content">
-                <!-- EXCHANGE RATE BAR -->
-                <section class="exchange-shell" aria-label="Tỷ giá hối đoái">
-                    <div class="exchange-rates">
-                        <div class="exchange-bar-rate">
-                            <div class="exchange-bar-flag"><i class="icon-svg" data-lucide="refresh-cw"></i> KRW sang VND</div>
-                            <div class="exchange-bar-value" id="exchangeRateValue">Đang tải...</div>
-                            <div class="exchange-bar-sub" id="exchangeSubtext">1 KRW = ... VND</div>
-                            <div class="exchange-status live" id="exchangeStatus"><span class="pulse-dot"></span> Đang kết nối...</div>
-                        </div>
-                        <div class="exchange-bar-rate">
-                            <div class="exchange-bar-flag"><i class="icon-svg" data-lucide="circle-dollar-sign"></i> USD sang VND</div>
-                            <div class="exchange-bar-value" id="usdRateValue">Đang tải...</div>
-                            <div class="exchange-bar-sub" id="usdSubtext">1 USD = ... VND</div>
+                <!-- OVERVIEW SUB-TOOLBAR (RATES & CURRENCY SWITCHER) -->
+                <div class="overview-header-bar">
+                    <div class="overview-tools-left">
+                        <!-- Live Rates Chip -->
+                        <div class="header-rate-chip" title="Tỷ giá hối đoái thời gian thực">
+                            <span class="pulse-dot"></span>
+                            <div class="hdr-rate-item">
+                                <span class="hdr-rate-lbl">1₩:</span>
+                                <strong id="hdrRateKrw">19.15 đ</strong>
+                            </div>
+                            <span class="hdr-rate-divider">|</span>
+                            <div class="hdr-rate-item">
+                                <span class="hdr-rate-lbl">1$:</span>
+                                <strong id="hdrRateUsd">25,744 đ</strong>
+                            </div>
+                            <button class="hdr-refresh-btn" onclick="fetchExchangeRate(); refreshCryptoPrices(); refreshStockPrices();" title="Làm mới tỷ giá & tài sản">
+                                <i class="icon-svg" data-lucide="refresh-cw"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="exchange-bar-converter converter-card">
-                        <div class="converter-row">
-                            <span class="converter-label">KRW</span>
-                            <input class="converter-input" type="text" inputmode="numeric" id="krwInput" placeholder="Nhập KRW"
-                                oninput="formatInputLive(this); convertFromKRW()">
+
+                    <!-- Currency Switcher Segmented Control -->
+                    <div class="currency-toggle-group">
+                        <button class="cur-btn" id="curBtnVND" data-cur="VND"
+                            onclick="setDisplayCurrency('VND')">VND</button>
+                        <button class="cur-btn active" id="curBtnKRW" data-cur="KRW"
+                            onclick="setDisplayCurrency('KRW')">KRW</button>
+                        <button class="cur-btn" id="curBtnUSD" data-cur="USD"
+                            onclick="setDisplayCurrency('USD')">USD</button>
+                    </div>
+                </div>
+
+                <!-- ROW 1: 3 EXCHANGE & CONVERTER CARDS -->
+                <section class="exchange-tri-grid" aria-label="Tỷ giá hối đoái">
+                    <div class="ex-card">
+                        <div class="ex-card-header">
+                            <span class="ex-card-label"><i class="icon-svg" data-lucide="refresh-cw"></i> KRW / VND</span>
+                            <span class="badge-realtime" id="exchangeStatus">Realtime</span>
                         </div>
-                        <div class="converter-row">
-                            <span class="converter-label">VND</span>
-                            <input class="converter-input" type="text" inputmode="numeric" id="vndInput" placeholder="Nhập VND"
-                                oninput="formatInputLive(this); convertFromVND()">
+                        <div class="ex-card-val" id="exchangeRateValue">19.15 đ</div>
+                        <div class="ex-card-sub" id="exchangeSubtext"><span class="badge-sub-pill pos">+0.12% 24h</span></div>
+                    </div>
+
+                    <div class="ex-card">
+                        <div class="ex-card-header">
+                            <span class="ex-card-label"><i class="icon-svg" data-lucide="circle-dollar-sign"></i> USD / VND</span>
+                            <span class="badge-usd">USD</span>
                         </div>
-                        <div class="converter-row">
-                            <span class="converter-label">USD</span>
-                            <input class="converter-input" type="text" inputmode="numeric" id="usdInput" placeholder="Nhập USD"
-                                oninput="formatInputLive(this); convertFromUSD()">
+                        <div class="ex-card-val" id="usdRateValue">25,744 đ</div>
+                        <div class="ex-card-sub" id="usdSubtext"><span class="badge-sub-pill pos">+0.05% 24h</span></div>
+                    </div>
+
+                    <div class="ex-card converter-card-box">
+                        <div class="ex-card-header">
+                            <span class="ex-card-label"><i class="icon-svg" data-lucide="arrow-left-right"></i> Quy Đổi Ngoại Tệ</span>
+                            <span class="badge-time">Tức thì</span>
                         </div>
-                        <div class="converter-result" id="converterResult">Nhập số tiền để quy đổi</div>
+                        <div class="converter-inputs-tri">
+                            <div class="conv-field">
+                                <label>Won (₩)</label>
+                                <input type="text" inputmode="numeric" id="krwInput" placeholder="10,000"
+                                    oninput="formatInputLive(this); convertFromKRW()">
+                            </div>
+                            <div class="conv-field">
+                                <label>Đồng (₫)</label>
+                                <input type="text" inputmode="numeric" id="vndInput" placeholder="191,500"
+                                    oninput="formatInputLive(this); convertFromVND()">
+                            </div>
+                            <div class="conv-field">
+                                <label>USD ($)</label>
+                                <input type="text" inputmode="numeric" id="usdInput" placeholder="7.44"
+                                    oninput="formatInputLive(this); convertFromUSD()">
+                            </div>
+                        </div>
+                        <div class="converter-sync-result" id="converterResult">10,000 ₩ ≈ 191,500 ₫ | $7.44</div>
                     </div>
                 </section>
 
-                <!-- SUMMARY CARDS -->
-                <section class="stats-section" id="overviewSection" aria-label="Tổng quan">
-                    <div class="summary-grid">
-                        <article class="summary-card compact-mobile balance">
-                            <div class="card-icon"><i class="icon-svg" data-lucide="landmark"></i></div>
-                            <div class="metric-card-content">
-                                <div class="card-label">Số dư hiện tại</div>
-                                <div class="card-value" id="totalBalance">0 ₫</div>
-                                <div class="card-sub" id="balanceKRW">≈ 0 ₩</div>
-                            </div>
-                        </article>
-                        <article class="summary-card compact-mobile income">
-                            <div class="card-icon"><i class="icon-svg" data-lucide="trending-up"></i></div>
-                            <div class="metric-card-content">
-                                <div class="card-label">Tổng thu nhập</div>
-                                <div class="card-value" id="totalIncome">0 ₫</div>
-                                <div class="card-sub" id="incomeKRW">≈ 0 ₩</div>
-                            </div>
-                        </article>
-                        <article class="summary-card compact-mobile expense">
-                            <div class="card-icon"><i class="icon-svg" data-lucide="trending-down"></i></div>
-                            <div class="metric-card-content">
-                                <div class="card-label">Tổng chi tiêu</div>
-                                <div class="card-value" id="totalExpense">0 ₫</div>
-                                <div class="card-sub" id="expenseKRW">≈ 0 ₩</div>
-                            </div>
-                        </article>
-                        <article class="summary-card compact-mobile savings">
-                            <div class="card-icon"><i class="icon-svg" data-lucide="target"></i></div>
-                            <div class="metric-card-content">
-                                <div class="card-label">Tỉ lệ tiết kiệm</div>
-                                <div class="card-value" id="savingsRate">0%</div>
-                                <div class="card-sub" id="savingsLabel">--</div>
-                            </div>
-                        </article>
-                        <article class="summary-card compact-mobile health" id="healthCard">
-                            <div class="card-icon"><i class="icon-svg" id="healthIcon" data-lucide="activity"></i></div>
-                            <div class="metric-card-content">
-                                <div class="card-label">Sức khỏe tài chính</div>
-                                <div class="card-value health-score" id="healthScore">--</div>
-                                <div class="card-sub" id="healthLabel">Chưa có dữ liệu</div>
-                            </div>
-                        </article>
-                        <article class="summary-card compact-mobile reserve" id="reserveCard">
-                            <div class="card-icon"><i class="icon-svg" data-lucide="shield-check"></i></div>
-                            <div class="metric-card-content">
-                                <div class="card-label">Quỹ dự phòng</div>
-                                <div class="card-value" id="reserveTotal">0 ₩</div>
-                                <div class="card-sub" id="survivalMonths">An toàn: -- tháng</div>
-                            </div>
-                        </article>
-                    </div>
-                    <article class="financial-insight-card" id="financialInsightCard" aria-label="Gợi ý tài chính">
-                        <div class="financial-insight-icon"><i class="icon-svg" data-lucide="sparkles"></i></div>
-                        <div class="financial-insight-body">
-                            <div class="financial-insight-kicker">Gợi ý tài chính</div>
-                            <h2 id="financialInsightTitle">Chưa có dữ liệu</h2>
-                            <p id="financialInsightText">Nhập thu nhập và chi tiêu để nhận phân tích tự động.</p>
+                <!-- ROW 2: 4 METRIC STATS CARDS -->
+                <section class="overview-stats-grid" aria-label="Chỉ số tài chính">
+                    <div class="metric-glass-card">
+                        <div class="metric-top-row">
+                            <span class="metric-kicker">SỐ DƯ HIỆN TẠI</span>
+                            <span class="metric-pill unified">Hợp nhất</span>
                         </div>
-                        <div class="financial-insight-score" id="financialInsightScore">--</div>
-                    </article>
+                        <div class="metric-value" id="totalBalance">25,984,768 ₩</div>
+                        <div class="metric-sub" id="balanceKRW"></div>
+                        <div class="metric-footer">
+                            <span class="metric-growth pos"><i class="icon-svg" data-lucide="trending-up"></i> Hợp nhất tài sản</span>
+                            <svg class="sparkline-svg" viewBox="0 0 80 24">
+                                <path d="M 0,18 Q 20,20 40,10 T 80,4" fill="none" stroke="#00b894" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="metric-glass-card">
+                        <div class="metric-top-row">
+                            <span class="metric-kicker">TỔNG THU NHẬP</span>
+                            <span class="metric-pill year" id="cardIncomeYear">2026</span>
+                        </div>
+                        <div class="metric-value green" id="totalIncome">1,161,775 ₩</div>
+                        <div class="metric-sub" id="incomeKRW"></div>
+                        <div class="metric-footer">
+                            <span class="metric-growth pos" id="incomeRatioText" onclick="openRatioConfigModal()" title="Nhấp để tùy chỉnh tỷ lệ %" style="cursor: pointer;"><i class="icon-svg" data-lucide="trending-up"></i> Quy tắc 40-40-20</span>
+                            <svg class="sparkline-svg" viewBox="0 0 80 24">
+                                <path d="M 0,22 Q 25,18 50,12 T 80,6" fill="none" stroke="#00b894" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="metric-glass-card">
+                        <div class="metric-top-row">
+                            <span class="metric-kicker">TỔNG CHI TIÊU</span>
+                            <span class="metric-pill control">Kiểm soát</span>
+                        </div>
+                        <div class="metric-value red" id="totalExpense">95,877 ₩</div>
+                        <div class="metric-sub" id="expenseKRW"></div>
+                        <div class="metric-footer">
+                            <span class="metric-growth red-text" id="expenseGrowthText"><i class="icon-svg" data-lucide="trending-down"></i> Chiếm 8.3% thu nhập</span>
+                            <svg class="sparkline-svg" viewBox="0 0 80 24">
+                                <path d="M 0,8 Q 30,16 50,10 T 80,18" fill="none" stroke="#ff6b6b" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="metric-glass-card">
+                        <div class="metric-top-row">
+                            <span class="metric-kicker">TÍCH LŨY RÒNG</span>
+                            <span class="metric-pill excellent">Xuất sắc</span>
+                        </div>
+                        <div class="metric-value blue" id="netSavingsTotal">1,065,898 ₩</div>
+                        <div class="metric-sub" id="netSavingsSub"></div>
+                        <div class="metric-footer">
+                            <span class="metric-growth neutral" id="savingsRateSub">Tiết kiệm 92%</span>
+                            <span class="badge-grade-a">A+</span>
+                        </div>
+                    </div>
                 </section>
 
-                <!-- SAVINGS GOAL -->
+                <!-- ROW 3: BENTO CHARTS ROW -->
+                <section class="overview-charts-grid" aria-label="Biểu đồ phân tích">
+                    <div class="panel chart-panel line-chart-card">
+                        <div class="panel-header chart-panel-header">
+                            <div>
+                                <h3 class="chart-title">Biểu Đồ Thu Chi (<span id="chartYearTitle">2026</span>)</h3>
+                            </div>
+                            <div class="chart-controls-row">
+                                <div class="chart-legend-labels">
+                                    <span class="lg-dot green"></span> Thu nhập
+                                    <span class="lg-dot red"></span> Chi phí
+                                    <span class="lg-dot blue"></span> Lợi nhuận
+                                </div>
+                                <div class="chart-mode-toggles">
+                                    <button class="btn-chart-mode active" id="btnModeCombo"
+                                        onclick="setChartTypeMode('combo')">Kết hợp</button>
+                                    <button class="btn-chart-mode" id="btnModeBar" onclick="setChartTypeMode('bar')">Cột
+                                        đôi</button>
+                                    <button class="btn-chart-mode" id="btnModeLine"
+                                        onclick="setChartTypeMode('line')">Đường cong</button>
+                                </div>
+                                <button class="chart-zoom-btn" onclick="openChartFullscreen()" title="Phóng to"><i
+                                        class="icon-svg" data-lucide="search"></i></button>
+                            </div>
+                        </div>
+                        <div class="budget-chart-container" id="budgetOverviewChart" onclick="openChartFullscreen()">
+                        </div>
+                    </div>
+
+                    <div class="panel chart-panel allocation-chart-card">
+                        <div class="panel-header chart-panel-header">
+                            <div>
+                                <h3 class="chart-title">Phân Bổ Thực Tế</h3>
+                            </div>
+                            <div class="chart-header-actions" style="display: flex; align-items: center; gap: 8px;">
+                                <div class="year-selector year-selector-circle">
+                                    <button type="button" onclick="changeYear(-1)" title="Năm trước" aria-label="Năm trước">◀</button>
+                                    <span class="year-label" id="overviewYearLabel">2026</span>
+                                    <button type="button" onclick="changeYear(1)" title="Năm sau" aria-label="Năm sau">▶</button>
+                                </div>
+                                <span class="badge-rule-40" id="badgeRuleRatio" onclick="openRatioConfigModal()" title="Nhấp để tùy chỉnh tỷ lệ %" style="cursor: pointer;">Quy tắc 40-40-20</span>
+                            </div>
+                        </div>
+                        <div class="pie-charts-section">
+                            <div class="pie-grid">
+                                <div class="pie-card">
+                                    <h4 class="pie-card-title">Năm <span id="pieYearLabel">2026</span></h4>
+                                    <div class="pie-chart-container" id="pieChartYearly"></div>
+                                    <div id="pieLegendYearly" class="pie-legend"></div>
+                                </div>
+                                <div class="pie-card">
+                                    <h4 class="pie-card-title">Tất cả năm</h4>
+                                    <div class="pie-chart-container" id="pieChartAllTime"></div>
+                                    <div id="pieLegendAllTime" class="pie-legend"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SAVINGS GOAL SECTION -->
                 <section class="panel savings-goal-panel" id="savingsGoalPanel" aria-label="Mục tiêu tiết kiệm">
                     <div class="panel-header">
-                        <h2 class="panel-title"><i class="icon-svg" data-lucide="badge-dollar-sign"></i> Mục tiêu tiết kiệm</h2>
+                        <h2 class="panel-title"><i class="icon-svg" data-lucide="badge-dollar-sign"></i> Mục tiêu tiết
+                            kiệm</h2>
                     </div>
                     <div id="savingsGoalContent">
                         <div class="goal-form" id="goalForm">
@@ -292,81 +419,158 @@
                                         <option value="KRW">₩ KRW</option>
                                         <option value="VND">₫ VND</option>
                                     </select>
-                                    <input type="text" inputmode="numeric" id="goalAmount" placeholder="Số tiền" class="goal-input goal-amount-input"
+                                    <input type="text" inputmode="numeric" id="goalAmount" placeholder="Số tiền"
+                                        class="goal-input goal-amount-input"
                                         oninput="formatInputLive(this); previewGoalVND()">
                                 </div>
                                 <span class="goal-vnd-preview" id="goalVndPreview"></span>
                             </div>
                             <div class="goal-field goal-month-field">
                                 <span>Thời hạn (tùy chọn)</span>
-                                <input type="number" id="goalMonths" placeholder="Số tháng (tùy chọn)" class="goal-input" min="1"
-                                    max="120">
+                                <input type="number" id="goalMonths" placeholder="Số tháng (tùy chọn)"
+                                    class="goal-input" min="1" max="120">
                             </div>
                             <div class="goal-field goal-btn-field">
-                                <button onclick="addSavingsGoal()" class="goal-add-btn"><i class="icon-svg" data-lucide="plus"></i> <span>Thêm</span></button>
+                                <button onclick="addSavingsGoal()" class="goal-add-btn"><i class="icon-svg"
+                                        data-lucide="plus"></i> <span>Thêm</span></button>
                             </div>
                         </div>
                         <div id="goalsList"></div>
                     </div>
                 </section>
+            </div>
 
-                <!-- BENTO GRID SECTION FOR CHARTS -->
-                <section class="overview-charts-grid" aria-label="Biểu đồ phân tích">
-                    <!-- LINE CHART CARD -->
-                    <div class="panel chart-panel line-chart-card">
-                        <div class="panel-header chart-panel-header">
-                            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-                                <h3 class="chart-title"><i class="icon-svg" data-lucide="chart-no-axes-combined"></i> Biểu đồ tổng quan các tháng</h3>
-                                <button class="chart-zoom-btn" onclick="openChartFullscreen()" title="Phóng to"><i class="icon-svg" data-lucide="search"></i></button>
+            <!-- TAB 2: QUẢN TRỊ TÀI SẢN -->
+            <div id="tab-assets" class="tab-pane animate-tab-content">
+                <!-- HERO PORTFOLIO CARD -->
+                <section class="portfolio-hero-card" aria-label="Tổng quan danh mục đầu tư">
+                    <div class="portfolio-hero-header">
+                        <span class="portfolio-hero-kicker">TỔNG DANH MỤC ĐẦU TƯ & TIỀN MẶT</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="currency-toggle-group">
+                                <button class="cur-btn" data-cur="VND" onclick="setDisplayCurrency('VND')">VND</button>
+                                <button class="cur-btn active" data-cur="KRW"
+                                    onclick="setDisplayCurrency('KRW')">KRW</button>
+                                <button class="cur-btn" data-cur="USD" onclick="setDisplayCurrency('USD')">USD</button>
                             </div>
+                            <span class="badge-item-count" id="assetTotalCountBadge">10 Mục tài sản</span>
                         </div>
-                        <div class="budget-chart-container" id="budgetOverviewChart" onclick="openChartFullscreen()"></div>
                     </div>
-
-                    <!-- ALLOCATION CHART CARD -->
-                    <div class="panel chart-panel allocation-chart-card">
-                        <div class="panel-header chart-panel-header">
-                            <h3 class="chart-title"><i class="icon-svg" data-lucide="chart-pie"></i> Phân bổ thực tế</h3>
+                    <div class="portfolio-hero-main">
+                        <h2 class="portfolio-hero-amount" id="portfolioHeroTotal">25,981,901 ₩</h2>
+                    </div>
+                    <div class="portfolio-hero-breakdown">
+                        <div class="portfolio-sub-card cash" onclick="setAssetFilter('cash')">
+                            <div class="sub-card-title"><i class="icon-svg" data-lucide="wallet"></i> Tiền mặt</div>
+                            <div class="sub-card-val" id="heroCashTotal">5,777,358 ₩</div>
                         </div>
-                        <div class="pie-charts-section">
-                            <div class="pie-grid">
-                                <div class="pie-card">
-                                    <h4 class="pie-card-title">Năm đang chọn (<span id="pieYearLabel">2026</span>)</h4>
-                                    <div class="pie-chart-container" id="pieChartYearly"></div>
-                                    <div id="pieLegendYearly" class="pie-legend"></div>
-                                </div>
-                                <div class="pie-card">
-                                    <h4 class="pie-card-title">Tổng thể (Tất cả các năm)</h4>
-                                    <div class="pie-chart-container" id="pieChartAllTime"></div>
-                                    <div id="pieLegendAllTime" class="pie-legend"></div>
-                                </div>
+                        <div class="portfolio-sub-card crypto" onclick="setAssetFilter('crypto')">
+                            <div class="sub-card-title"><i class="icon-svg" data-lucide="coins"></i> Crypto</div>
+                            <div class="sub-card-val" id="heroCryptoTotal">15,914,951 ₩</div>
+                        </div>
+                        <div class="portfolio-sub-card stocks" onclick="setAssetFilter('stock_vn')">
+                            <div class="sub-card-title"><i class="icon-svg" data-lucide="trending-up"></i> Cổ phiếu VN
                             </div>
+                            <div class="sub-card-val" id="heroStockTotal">4,289,592 ₩</div>
                         </div>
                     </div>
                 </section>
-            </div>
 
+                <!-- ASSET FILTERS BAR -->
+                <div class="asset-filters-bar">
+                    <button class="asset-filter-pill active" id="filter-asset-all" onclick="setAssetFilter('all')">
+                        <i class="icon-svg" data-lucide="layers"></i> <span>Tất cả</span>
+                    </button>
+                    <button class="asset-filter-pill" id="filter-asset-crypto" onclick="setAssetFilter('crypto')">
+                        <i class="icon-svg" data-lucide="coins"></i> <span>Crypto Coin</span>
+                    </button>
+                    <button class="asset-filter-pill" id="filter-asset-stock_vn" onclick="setAssetFilter('stock_vn')">
+                        <i class="icon-svg" data-lucide="trending-up"></i> <span>Cổ Phiếu VN</span>
+                    </button>
+                    <button class="asset-filter-pill" id="filter-asset-cash" onclick="setAssetFilter('cash')">
+                        <i class="icon-svg" data-lucide="wallet"></i> <span>Tiền Mặt</span>
+                    </button>
+                </div>
+
+                <!-- SECTION CRYPTO -->
+                <section class="asset-section-card" id="sectionCrypto">
+                    <div class="asset-section-header">
+                        <div class="asset-section-title-wrap">
+                            <div class="asset-cat-icon crypto"><i class="icon-svg" data-lucide="link"></i></div>
+                            <div>
+                                <h3 class="asset-cat-title">Danh Mục Crypto (Coin)</h3>
+                                <div class="asset-cat-sub" id="cryptoSummarySub">Tổng: 15,914,951 ₩ -3.26% (-$391.90)
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-primary-add" onclick="openAddCryptoModal()">
+                            <i class="icon-svg" data-lucide="plus"></i> <span>Thêm Coin</span>
+                        </button>
+                    </div>
+                    <div class="asset-items-list" id="cryptoListContainer"></div>
+                </section>
+
+                <!-- SECTION STOCKS -->
+                <section class="asset-section-card" id="sectionStocks">
+                    <div class="asset-section-header">
+                        <div class="asset-section-title-wrap">
+                            <div class="asset-cat-icon stocks"><i class="icon-svg" data-lucide="trending-up"></i></div>
+                            <div>
+                                <h3 class="asset-cat-title">Chứng Khoán Việt Nam</h3>
+                                <div class="asset-cat-sub" id="stockSummarySub">Tổng: 4,289,592 ₩ -45.71% (-67.740.000
+                                    đ)</div>
+                            </div>
+                        </div>
+                        <button class="btn-primary-add" onclick="openAddStockModal()">
+                            <i class="icon-svg" data-lucide="plus"></i> <span>Thêm Cổ Phiếu</span>
+                        </button>
+                    </div>
+                    <div class="asset-items-list" id="stockListContainer"></div>
+                </section>
+
+                <!-- SECTION CASH -->
+                <section class="asset-section-card" id="sectionCash">
+                    <div class="asset-section-header">
+                        <div class="asset-section-title-wrap">
+                            <div class="asset-cat-icon cash"><i class="icon-svg" data-lucide="landmark"></i></div>
+                            <div>
+                                <h3 class="asset-cat-title">Tiền Mặt & Tài Khoản Ngân Hàng</h3>
+                                <div class="asset-cat-sub" id="cashSummarySub">Tổng: 5,777,358 ₩</div>
+                            </div>
+                        </div>
+                        <button class="btn-primary-add" onclick="openAddCashModal()">
+                            <i class="icon-svg" data-lucide="plus"></i> <span>Thêm Tiền Mặt</span>
+                        </button>
+                    </div>
+                    <div class="asset-items-list" id="cashListContainer"></div>
+                </section>
+            </div>
             <!-- TAB 2: LỊCH SỬ TỶ GIÁ -->
             <div id="tab-exchange" class="tab-pane animate-tab-content">
                 <section class="panel exchange-chart-panel" aria-label="Lịch sử tỷ giá">
-                    <div class="panel-header" style="flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
+                    <div class="panel-header"
+                        style="flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
                         <h2 class="panel-title">Lịch sử Tỷ giá (15 ngày)</h2>
                         <div class="exchange-legend-selector">
-                            <button class="exchange-mode-btn active" id="btnRateBoth" onclick="setExchangeRateMode('both')" title="Xem tất cả tỷ giá">
+                            <button class="exchange-mode-btn active" id="btnRateBoth"
+                                onclick="setExchangeRateMode('both')" title="Xem tất cả tỷ giá">
                                 <span class="dot-indicator both"></span> <span>Tất cả</span>
                             </button>
-                            <button class="exchange-mode-btn" id="btnRateKRW" onclick="setExchangeRateMode('krw')" title="Chỉ xem KRW/VND">
+                            <button class="exchange-mode-btn" id="btnRateKRW" onclick="setExchangeRateMode('krw')"
+                                title="Chỉ xem KRW/VND">
                                 <span class="dot-indicator krw"></span> <span>KRW/VND</span>
                             </button>
-                            <button class="exchange-mode-btn" id="btnRateUSD" onclick="setExchangeRateMode('usd')" title="Chỉ xem USD/VND">
+                            <button class="exchange-mode-btn" id="btnRateUSD" onclick="setExchangeRateMode('usd')"
+                                title="Chỉ xem USD/VND">
                                 <span class="dot-indicator usd"></span> <span>USD/VND</span>
                             </button>
-                            <button class="exchange-mode-btn" id="btnRateUSDKRW" onclick="setExchangeRateMode('usdKrw')" title="Chỉ xem USD/KRW">
+                            <button class="exchange-mode-btn" id="btnRateUSDKRW" onclick="setExchangeRateMode('usdKrw')"
+                                title="Chỉ xem USD/KRW">
                                 <span class="dot-indicator usdkrw"></span> <span>USD/KRW</span>
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Triple Currency Stats summary cards -->
                     <div class="exchange-stats-summary triple-currency-stats">
                         <div class="exchange-stat-card krw-stat-card">
@@ -375,8 +579,10 @@
                             </div>
                             <div class="stat-current-val" id="krwHistoryCurrent">-- ₫</div>
                             <div class="stat-minmax-row">
-                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg" data-lucide="arrow-up-right"></i> <span id="krwHistoryMax">-- ₫</span></span>
-                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg" data-lucide="arrow-down-right"></i> <span id="krwHistoryMin">-- ₫</span></span>
+                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg"
+                                        data-lucide="arrow-up-right"></i> <span id="krwHistoryMax">-- ₫</span></span>
+                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg"
+                                        data-lucide="arrow-down-right"></i> <span id="krwHistoryMin">-- ₫</span></span>
                             </div>
                         </div>
 
@@ -386,8 +592,10 @@
                             </div>
                             <div class="stat-current-val" id="usdHistoryCurrent">-- ₫</div>
                             <div class="stat-minmax-row">
-                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg" data-lucide="arrow-up-right"></i> <span id="usdHistoryMax">-- ₫</span></span>
-                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg" data-lucide="arrow-down-right"></i> <span id="usdHistoryMin">-- ₫</span></span>
+                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg"
+                                        data-lucide="arrow-up-right"></i> <span id="usdHistoryMax">-- ₫</span></span>
+                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg"
+                                        data-lucide="arrow-down-right"></i> <span id="usdHistoryMin">-- ₫</span></span>
                             </div>
                         </div>
 
@@ -397,8 +605,11 @@
                             </div>
                             <div class="stat-current-val" id="usdKrwHistoryCurrent">-- ₩</div>
                             <div class="stat-minmax-row">
-                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg" data-lucide="arrow-up-right"></i> <span id="usdKrwHistoryMax">-- ₩</span></span>
-                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg" data-lucide="arrow-down-right"></i> <span id="usdKrwHistoryMin">-- ₩</span></span>
+                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg"
+                                        data-lucide="arrow-up-right"></i> <span id="usdKrwHistoryMax">-- ₩</span></span>
+                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg"
+                                        data-lucide="arrow-down-right"></i> <span id="usdKrwHistoryMin">--
+                                        ₩</span></span>
                             </div>
                         </div>
                     </div>
@@ -412,9 +623,11 @@
             <div id="tab-budget" class="tab-pane animate-tab-content">
                 <section class="budget-section panel" id="budgetSection" aria-label="Bảng ngân sách 12 tháng">
                     <div class="panel-header">
-                        <h2 class="panel-title"><i class="icon-svg" data-lucide="calendar-range"></i> Ngân Sách 12 Tháng</h2>
+                        <h2 class="panel-title"><i class="icon-svg" data-lucide="calendar-range"></i> Ngân Sách 12 Tháng
+                        </h2>
                         <div class="panel-header-actions" style="display: flex; gap: 10px; align-items: center;">
-                            <button class="action-btn" onclick="exportToCSV()" title="Tải xuống báo cáo Excel"><i class="icon-svg" data-lucide="download"></i> Xuất CSV</button>
+                            <button class="action-btn" onclick="exportToCSV()" title="Tải xuống báo cáo Excel"><i
+                                    class="icon-svg" data-lucide="download"></i> Xuất CSV</button>
                             <div class="year-selector">
                                 <button onclick="changeYear(-1)">◀</button>
                                 <span class="year-label" id="yearLabel">2026</span>
@@ -426,11 +639,13 @@
                     <!-- KRW Dashboard Summary above table -->
                     <div class="budget-dashboard" id="budgetDashboard">
                         <div class="budget-dash-item income-dash">
-                            <span class="dash-label"><i class="icon-svg" data-lucide="trending-up"></i> Tổng Thu nhập</span>
+                            <span class="dash-label"><i class="icon-svg" data-lucide="trending-up"></i> Tổng Thu
+                                nhập</span>
                             <span class="dash-value" id="dashTotalIncome">0 ₩</span>
                         </div>
                         <div class="budget-dash-item expense-dash">
-                            <span class="dash-label"><i class="icon-svg" data-lucide="trending-down"></i> Tổng Chi tiêu</span>
+                            <span class="dash-label"><i class="icon-svg" data-lucide="trending-down"></i> Tổng Chi
+                                tiêu</span>
                             <span class="dash-value" id="dashTotalExpense">0 ₩</span>
                         </div>
                         <div class="budget-dash-item balance-dash">
@@ -438,7 +653,8 @@
                             <span class="dash-value" id="dashTotalBalance">0 ₩</span>
                         </div>
                         <div class="budget-dash-item savings-dash">
-                            <span class="dash-label"><i class="icon-svg" data-lucide="target"></i> Tỉ lệ tiết kiệm</span>
+                            <span class="dash-label"><i class="icon-svg" data-lucide="target"></i> Tỉ lệ tiết
+                                kiệm</span>
                             <span class="dash-value" id="dashSavingsRate">0%</span>
                         </div>
                     </div>
@@ -449,9 +665,18 @@
                                 <tr>
                                     <th>Tháng</th>
                                     <th>Thu nhập<br><small class="th-pct green">₩ KRW</small></th>
-                                    <th class="th-ratio-clickable" onclick="openRatioConfigModal()" title="Nhấp để tùy chỉnh tỷ lệ %">Sinh hoạt<br><small class="th-pct blue" id="thLivingPct">40% <i class="icon-svg" data-lucide="pencil" style="width:10px;height:10px;"></i></small></th>
-                                    <th class="th-ratio-clickable" onclick="openRatioConfigModal()" title="Nhấp để tùy chỉnh tỷ lệ %">Dự phòng<br><small class="th-pct yellow" id="thReservePct">40% <i class="icon-svg" data-lucide="pencil" style="width:10px;height:10px;"></i></small></th>
-                                    <th class="th-ratio-clickable" onclick="openRatioConfigModal()" title="Nhấp để tùy chỉnh tỷ lệ %">Đầu tư<br><small class="th-pct purple" id="thInvestPct">20% <i class="icon-svg" data-lucide="pencil" style="width:10px;height:10px;"></i></small></th>
+                                    <th class="th-ratio-clickable" onclick="openRatioConfigModal()"
+                                        title="Nhấp để tùy chỉnh tỷ lệ %">Sinh hoạt<br><small class="th-pct blue"
+                                            id="thLivingPct">40% <i class="icon-svg" data-lucide="pencil"
+                                                style="width:10px;height:10px;"></i></small></th>
+                                    <th class="th-ratio-clickable" onclick="openRatioConfigModal()"
+                                        title="Nhấp để tùy chỉnh tỷ lệ %">Dự phòng<br><small class="th-pct yellow"
+                                            id="thReservePct">40% <i class="icon-svg" data-lucide="pencil"
+                                                style="width:10px;height:10px;"></i></small></th>
+                                    <th class="th-ratio-clickable" onclick="openRatioConfigModal()"
+                                        title="Nhấp để tùy chỉnh tỷ lệ %">Đầu tư<br><small class="th-pct purple"
+                                            id="thInvestPct">20% <i class="icon-svg" data-lucide="pencil"
+                                                style="width:10px;height:10px;"></i></small></th>
                                     <th>Chi tiêu<br><small class="th-pct red">₩ / % Thu nhập</small></th>
                                     <th>Còn lại</th>
                                     <th>Dư/Thiếu<br><small class="th-pct green">SH-CT</small></th>
@@ -463,13 +688,16 @@
                     </div>
                     <div class="table-legend">
                         <div class="table-legend-item">
-                            <div class="table-legend-dot" style="background:#74b9ff"></div> <span id="legendLiving">Sinh hoạt 40%</span>
+                            <div class="table-legend-dot" style="background:#74b9ff"></div> <span id="legendLiving">Sinh
+                                hoạt 40%</span>
                         </div>
                         <div class="table-legend-item">
-                            <div class="table-legend-dot" style="background:#ff9f43"></div> <span id="legendReserve">Dự phòng 40%</span>
+                            <div class="table-legend-dot" style="background:#ff9f43"></div> <span id="legendReserve">Dự
+                                phòng 40%</span>
                         </div>
                         <div class="table-legend-item">
-                            <div class="table-legend-dot" style="background:#a29bfe"></div> <span id="legendInvest">Đầu tư 20%</span>
+                            <div class="table-legend-dot" style="background:#a29bfe"></div> <span id="legendInvest">Đầu
+                                tư 20%</span>
                         </div>
                     </div>
                 </section>
@@ -488,11 +716,15 @@
                                 <div class="settings-option">
                                     <div class="settings-option-text">
                                         <h4>Khóa ứng dụng bằng mã PIN</h4>
-                                        <p>Yêu cầu nhập mã PIN 4 số mỗi khi khởi động ứng dụng để bảo vệ thông tin tài chính.</p>
+                                        <p>Yêu cầu nhập mã PIN 4 số mỗi khi khởi động ứng dụng để bảo vệ thông tin tài
+                                            chính.</p>
                                     </div>
                                     <div class="settings-option-control">
-                                        <div class="pin-toggle-wrapper" onclick="togglePinSetting(); event.stopPropagation();" title="Bật/tắt khóa mã PIN">
-                                            <span class="pin-toggle-label"><i class="icon-svg" data-lucide="lock-keyhole"></i> PIN</span>
+                                        <div class="pin-toggle-wrapper"
+                                            onclick="togglePinSetting(); event.stopPropagation();"
+                                            title="Bật/tắt khóa mã PIN">
+                                            <span class="pin-toggle-label"><i class="icon-svg"
+                                                    data-lucide="lock-keyhole"></i> PIN</span>
                                             <div class="pin-toggle-switch" id="pinToggleSwitch"></div>
                                         </div>
                                     </div>
@@ -506,11 +738,13 @@
                                 <div class="settings-option">
                                     <div class="settings-option-text">
                                         <h4>Phiên bản & Cập nhật PWA</h4>
-                                        <p>Phiên bản: <strong>v56 (Rebrand to Duhoc Mate Finance)</strong></p>
-                                        <p class="update-status-sub" id="updateStatusText">Ứng dụng tự động tải bản mới khi đẩy code lên Git.</p>
+                                        <p>Phiên bản: <strong>v66 (Synchronized Ratios, Compact Header & Multi-Currency Sub-Values)</strong></p>
+                                        <p class="update-status-sub" id="updateStatusText">Ứng dụng tự động tải bản mới
+                                            khi đẩy code lên Git.</p>
                                     </div>
                                     <div class="settings-option-control">
-                                        <button class="action-btn" id="checkUpdateBtn" onclick="checkPWAUpdateManual()" title="Kiểm tra bản cập nhật mới nhất">
+                                        <button class="action-btn" id="checkUpdateBtn" onclick="checkPWAUpdateManual()"
+                                            title="Kiểm tra bản cập nhật mới nhất">
                                             <i class="icon-svg" data-lucide="refresh-cw"></i> <span>Kiểm tra</span>
                                         </button>
                                     </div>
@@ -527,7 +761,8 @@
                                         <p>Đăng xuất khỏi tài khoản Supabase trên thiết bị này.</p>
                                     </div>
                                     <div class="settings-option-control">
-                                        <button class="logout-btn icon-text-btn danger-btn" onclick="handleLogout()" title="Đăng xuất">
+                                        <button class="logout-btn icon-text-btn danger-btn" onclick="handleLogout()"
+                                            title="Đăng xuất">
                                             <i class="icon-svg" data-lucide="log-out"></i> <span>Đăng xuất</span>
                                         </button>
                                     </div>
@@ -538,21 +773,27 @@
                 </section>
             </div>
         </main>
+    </div> <!-- Closing appWrapper -->
 
-        <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Điều hướng nhanh">
-            <a href="javascript:void(0)" onclick="switchTab('overview')" id="m-nav-overview" class="active"><i class="icon-svg" data-lucide="layout-dashboard"></i><span>Tổng quan</span></a>
-            <a href="javascript:void(0)" onclick="switchTab('budget')" id="m-nav-budget"><i class="icon-svg" data-lucide="calendar-range"></i><span>Ngân sách 12T</span></a>
-            <a href="javascript:void(0)" onclick="switchTab('exchange')" id="m-nav-exchange"><i class="icon-svg" data-lucide="trending-up"></i><span>Tỷ giá</span></a>
-            <a href="javascript:void(0)" onclick="switchTab('settings')" id="m-nav-settings"><i class="icon-svg" data-lucide="settings"></i><span>Cài đặt</span></a>
-        </nav>
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Điều hướng nhanh">
+        <a href="javascript:void(0)" onclick="switchTab('overview')" id="m-nav-overview" class="active"><i
+                class="icon-svg" data-lucide="layout-dashboard"></i><span>Tổng quan</span></a>
+        <a href="javascript:void(0)" onclick="switchTab('assets')" id="m-nav-assets"><i class="icon-svg"
+                data-lucide="wallet"></i><span>Tài sản</span></a>
+        <a href="javascript:void(0)" onclick="switchTab('budget')" id="m-nav-budget"><i class="icon-svg"
+                data-lucide="calendar-range"></i><span>Ngân sách 12T</span></a>
+        <a href="javascript:void(0)" onclick="switchTab('exchange')" id="m-nav-exchange"><i class="icon-svg"
+                data-lucide="trending-up"></i><span>Tỷ giá</span></a>
+        <a href="javascript:void(0)" onclick="switchTab('settings')" id="m-nav-settings"><i class="icon-svg"
+                data-lucide="settings"></i><span>Cài đặt</span></a>
+    </nav>
 
-        <footer class="footer" id="settingsSection" role="contentinfo">
-            <p>Duhoc Mate Finance &copy; 2026</p>
-        </footer>
-    </div>
-
+    <footer class="footer" id="settingsSection" role="contentinfo">
+        <p>Duhoc Mate Finance &copy; 2026</p>
+    </footer>
     <div class="chart-fullscreen-overlay" id="chartFullscreen" onclick="closeChartFullscreen(event)">
-        <button class="chart-fs-close" onclick="closeChartFullscreen()"><i class="icon-svg" data-lucide="x"></i></button>
+        <button class="chart-fs-close" onclick="closeChartFullscreen()"><i class="icon-svg"
+                data-lucide="x"></i></button>
         <div class="chart-fs-content" id="chartFullscreenContent"></div>
     </div>
 
@@ -571,7 +812,8 @@
         </section>
     </div>
 
-    <div class="goz-confirm-backdrop" id="ratioConfigModal" aria-hidden="true" onclick="if(event.target === this) closeRatioConfigModal()">
+    <div class="goz-confirm-backdrop" id="ratioConfigModal" aria-hidden="true"
+        onclick="if(event.target === this) closeRatioConfigModal()">
         <section class="ratio-modal-card" role="dialog" aria-modal="true" aria-labelledby="ratioModalTitle">
             <div class="ratio-modal-header">
                 <h3 id="ratioModalTitle">Tùy chỉnh Tỷ lệ Ngân sách</h3>
@@ -589,7 +831,8 @@
                         <span>Sinh hoạt</span>
                     </div>
                     <div class="ratio-item-input-box">
-                        <input type="number" id="inputLivingPct" min="0" max="100" class="ratio-num-field" oninput="onRatioInputsChange()">
+                        <input type="number" id="inputLivingPct" min="0" max="100" class="ratio-num-field"
+                            oninput="onRatioInputsChange()">
                         <span class="ratio-unit">%</span>
                     </div>
                 </div>
@@ -599,7 +842,8 @@
                         <span>Dự phòng</span>
                     </div>
                     <div class="ratio-item-input-box">
-                        <input type="number" id="inputReservePct" min="0" max="100" class="ratio-num-field" oninput="onRatioInputsChange()">
+                        <input type="number" id="inputReservePct" min="0" max="100" class="ratio-num-field"
+                            oninput="onRatioInputsChange()">
                         <span class="ratio-unit">%</span>
                     </div>
                 </div>
@@ -609,7 +853,8 @@
                         <span>Đầu tư</span>
                     </div>
                     <div class="ratio-item-input-box">
-                        <input type="number" id="inputInvestPct" min="0" max="100" class="ratio-num-field" oninput="onRatioInputsChange()">
+                        <input type="number" id="inputInvestPct" min="0" max="100" class="ratio-num-field"
+                            oninput="onRatioInputsChange()">
                         <span class="ratio-unit">%</span>
                     </div>
                 </div>
@@ -619,15 +864,195 @@
             </div>
             <div class="ratio-modal-actions">
                 <button class="ratio-btn secondary" type="button" onclick="closeRatioConfigModal()">Hủy</button>
-                <button class="ratio-btn primary" id="btnSaveRatios" type="button" onclick="saveRatioConfig()">Lưu cài đặt</button>
+                <button class="ratio-btn primary" id="btnSaveRatios" type="button" onclick="saveRatioConfig()">Lưu cài
+                    đặt</button>
             </div>
         </section>
     </div>
 
+
+    <!-- FLOATING MOBILE VIEW BUTTON -->
+    <button class="floating-mobile-btn" onclick="toggleMobileViewMode()" title="Chuyển chế độ xem di động">
+        <i class="icon-svg" data-lucide="smartphone"></i>
+        <span>Xem Bản Mobile</span>
+    </button>
+
+    <!-- MODAL 1: THÊM / SỬA CRYPTO COIN -->
+    <div class="goz-confirm-backdrop" id="assetCryptoModal" aria-hidden="true"
+        onclick="if(event.target === this) closeAssetCryptoModal()">
+        <section class="ratio-modal-card asset-modal-card" role="dialog" aria-modal="true">
+            <div class="ratio-modal-header">
+                <h3 id="cryptoModalTitle">Thêm Đồng Coin (Crypto)</h3>
+                <button type="button" class="ratio-modal-close" onclick="closeAssetCryptoModal()" title="Đóng">
+                    <i class="icon-svg" data-lucide="x"></i>
+                </button>
+            </div>
+            <p class="ratio-modal-desc">Theo dõi danh mục Crypto và tính toán lãi/lỗ thời gian thực.</p>
+            <div class="ratio-modal-body">
+                <div class="quick-chips-row">
+                    <span class="quick-chip-label">Gợi ý nhanh:</span>
+                    <button type="button" class="quick-chip" onclick="selectCryptoChip('BTC', 'Bitcoin')">BTC</button>
+                    <button type="button" class="quick-chip" onclick="selectCryptoChip('ETH', 'Ethereum')">ETH</button>
+                    <button type="button" class="quick-chip" onclick="selectCryptoChip('SOL', 'Solana')">SOL</button>
+                    <button type="button" class="quick-chip"
+                        onclick="selectCryptoChip('USDT', 'Tether USD')">USDT</button>
+                    <button type="button" class="quick-chip" onclick="selectCryptoChip('BNB', 'BNB')">BNB</button>
+                    <button type="button" class="quick-chip" onclick="selectCryptoChip('XRP', 'Ripple')">XRP</button>
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Ký hiệu Coin</span>
+                    <input type="text" id="inputCryptoSymbol" placeholder="VD: BTC, ETH..." class="asset-text-field"
+                        oninput="onCryptoSymbolChange(this.value)">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Tên Coin</span>
+                    <input type="text" id="inputCryptoName" placeholder="VD: Bitcoin" class="asset-text-field">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Số lượng nắm giữ</span>
+                    <input type="number" step="any" min="0" id="inputCryptoAmount" placeholder="VD: 0.085"
+                        class="asset-text-field" oninput="calcCryptoModalPreview()">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Giá mua TB ($ USD)</span>
+                    <input type="number" step="any" min="0" id="inputCryptoBuyPrice" placeholder="VD: 62500"
+                        class="asset-text-field" oninput="calcCryptoModalPreview()">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Giá hiện tại ($ USD)</span>
+                    <div class="input-with-action">
+                        <input type="number" step="any" min="0" id="inputCryptoCurrentPrice" placeholder="VD: 76681"
+                            class="asset-text-field" oninput="calcCryptoModalPreview()">
+                        <button type="button" class="btn-fetch-price" onclick="fetchLiveCryptoPriceForModal()"
+                            title="Lấy giá live"><i class="icon-svg" data-lucide="refresh-cw"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div id="cryptoModalPreview" class="asset-modal-preview">
+                <div>Tổng giá trị: <strong id="cryptoPreviewVal">$0.00</strong> ≈ <strong id="cryptoPreviewKRW">0
+                        ₩</strong></div>
+                <div>Lợi nhuận: <strong id="cryptoPreviewPnL">0% ($0.00)</strong></div>
+            </div>
+            <input type="hidden" id="editingCryptoId" value="">
+            <div class="ratio-modal-actions">
+                <button class="ratio-btn secondary" type="button" onclick="closeAssetCryptoModal()">Hủy</button>
+                <button class="ratio-btn primary" type="button" onclick="saveCryptoAsset()">Lưu Coin</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- MODAL 2: THÊM / SỬA CỔ PHIẾU VIỆT NAM -->
+    <div class="goz-confirm-backdrop" id="assetStockModal" aria-hidden="true"
+        onclick="if(event.target === this) closeAssetStockModal()">
+        <section class="ratio-modal-card asset-modal-card" role="dialog" aria-modal="true">
+            <div class="ratio-modal-header">
+                <h3 id="stockModalTitle">Thêm Cổ Phiếu Việt Nam</h3>
+                <button type="button" class="ratio-modal-close" onclick="closeAssetStockModal()" title="Đóng">
+                    <i class="icon-svg" data-lucide="x"></i>
+                </button>
+            </div>
+            <p class="ratio-modal-desc">Quản lý cổ phiếu Việt Nam và tự động tính PnL Lãi/Lỗ.</p>
+            <div class="ratio-modal-body">
+                <div class="quick-chips-row">
+                    <span class="quick-chip-label">Mã phổ biến:</span>
+                    <button type="button" class="quick-chip"
+                        onclick="selectStockChip('FPT', 'Tập đoàn FPT (Công nghệ)')">FPT</button>
+                    <button type="button" class="quick-chip"
+                        onclick="selectStockChip('HPG', 'Tập đoàn Hòa Phát (Thép)')">HPG</button>
+                    <button type="button" class="quick-chip"
+                        onclick="selectStockChip('VCB', 'Ngân hàng Vietcombank')">VCB</button>
+                    <button type="button" class="quick-chip"
+                        onclick="selectStockChip('MWG', 'Thế Giới Di Động')">MWG</button>
+                    <button type="button" class="quick-chip"
+                        onclick="selectStockChip('TCB', 'Ngân hàng Techcombank')">TCB</button>
+                    <button type="button" class="quick-chip"
+                        onclick="selectStockChip('SSI', 'Chứng khoán SSI')">SSI</button>
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Mã cổ phiếu</span>
+                    <input type="text" id="inputStockSymbol" placeholder="VD: FPT, HPG..." class="asset-text-field"
+                        oninput="onStockSymbolChange(this.value)">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Tên doanh nghiệp</span>
+                    <input type="text" id="inputStockName" placeholder="VD: Tập đoàn FPT" class="asset-text-field">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Khối lượng (CP)</span>
+                    <input type="number" min="1" id="inputStockAmount" placeholder="VD: 680" class="asset-text-field"
+                        oninput="calcStockModalPreview()">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Giá vốn / Giá mua (₫)</span>
+                    <input type="number" min="0" id="inputStockBuyPrice" placeholder="VD: 125000"
+                        class="asset-text-field" oninput="calcStockModalPreview()">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Giá thị trường hiện tại (₫)</span>
+                    <div class="input-with-action">
+                        <input type="number" min="0" id="inputStockCurrentPrice" placeholder="VD: 58200"
+                            class="asset-text-field" oninput="calcStockModalPreview()">
+                        <button type="button" class="btn-fetch-price" onclick="fetchLiveStockPriceForModal()"
+                            title="Lấy giá live"><i class="icon-svg" data-lucide="refresh-cw"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div id="stockModalPreview" class="asset-modal-preview">
+                <div>Tổng giá trị: <strong id="stockPreviewVal">0 ₫</strong> ≈ <strong id="stockPreviewKRW">0 ₩</strong>
+                </div>
+                <div>Lợi nhuận: <strong id="stockPreviewPnL">0% (0 ₫)</strong></div>
+            </div>
+            <input type="hidden" id="editingStockId" value="">
+            <div class="ratio-modal-actions">
+                <button class="ratio-btn secondary" type="button" onclick="closeAssetStockModal()">Hủy</button>
+                <button class="ratio-btn primary" type="button" onclick="saveStockAsset()">Lưu Cổ Phiếu</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- MODAL 3: THÊM / SỬA TIỀN MẶT -->
+    <div class="goz-confirm-backdrop" id="assetCashModal" aria-hidden="true"
+        onclick="if(event.target === this) closeAssetCashModal()">
+        <section class="ratio-modal-card asset-modal-card" role="dialog" aria-modal="true">
+            <div class="ratio-modal-header">
+                <h3 id="cashModalTitle">Thêm Tài Khoản Tiền Mặt</h3>
+                <button type="button" class="ratio-modal-close" onclick="closeAssetCashModal()" title="Đóng">
+                    <i class="icon-svg" data-lucide="x"></i>
+                </button>
+            </div>
+            <p class="ratio-modal-desc">Thêm số dư tài khoản ngân hàng hoặc tiền mặt nhàn rỗi.</p>
+            <div class="ratio-modal-body">
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Tên tài khoản / Ngân hàng</span>
+                    <input type="text" id="inputCashName" placeholder="VD: Shinhan Bank, Techcombank, Tiền mặt..."
+                        class="asset-text-field">
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Loại tiền tệ</span>
+                    <select id="inputCashCurrency" class="asset-text-field" style="max-width:140px;">
+                        <option value="KRW">₩ KRW (Won)</option>
+                        <option value="VND">₫ VND (Đồng)</option>
+                        <option value="USD">$ USD (Đô la)</option>
+                    </select>
+                </div>
+                <div class="ratio-item-row">
+                    <span class="asset-field-label">Số dư hiện có</span>
+                    <input type="number" min="0" step="any" id="inputCashAmount" placeholder="VD: 5000000"
+                        class="asset-text-field">
+                </div>
+            </div>
+            <input type="hidden" id="editingCashId" value="">
+            <div class="ratio-modal-actions">
+                <button class="ratio-btn secondary" type="button" onclick="closeAssetCashModal()">Hủy</button>
+                <button class="ratio-btn primary" type="button" onclick="saveCashAsset()">Lưu Tiền Mặt</button>
+            </div>
+        </section>
+    </div>
     <div class="toast" id="toast"></div>
-    <script src="supabase.js"></script>
+    <script src="supabase.js?v=66"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="app.js?v=56"></script>
+    <script src="app.js?v=66"></script>
+    <script src="portfolio.js?v=66"></script>
 </body>
 
 </html>

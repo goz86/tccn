@@ -1,9 +1,10 @@
-const CACHE_NAME = 'finance-dashboard-v56';
+const CACHE_NAME = 'finance-dashboard-v66';
 const ASSETS = [
     './',
     'index.html',
     'style.css',
     'app.js',
+    'portfolio.js',
     'supabase.js',
     'manifest.json',
     'logo.png'
@@ -86,7 +87,7 @@ self.addEventListener('fetch', event => {
                     if (networkResponse && networkResponse.status === 200) {
                         caches.open(CACHE_NAME).then(cache => cache.put(request, networkResponse));
                     }
-                }).catch(() => {});
+                }).catch(() => { });
                 return cached;
             }
             return fetch(request);
