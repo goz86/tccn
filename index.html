@@ -133,12 +133,12 @@
                 <div class="header-brand" onclick="switchTab('overview')" style="cursor: pointer;"
                     title="Về trang Tổng Quan">
                     <div class="brand-avatar">
-                        <img src="logo.png" alt="FinMate Logo" class="brand-logo-img">
+                        <img src="logo.png" alt="Goz Pro Logo" class="brand-logo-img">
                     </div>
                     <div class="brand-text">
                         <div class="brand-title">
-                            <span>FinMate</span>
-                            <span class="badge-pro">PRO</span>
+                            <span>goz</span>
+                            <span class="badge-pro">pro</span>
                         </div>
                         <span class="brand-subtitle">Quản Trị Tài Chính</span>
                     </div>
@@ -262,27 +262,27 @@
 
                     <div class="ex-card converter-card-box">
                         <div class="ex-card-header">
-                            <span class="ex-card-label"><i class="icon-svg" data-lucide="arrow-left-right"></i> QUY ĐỔI NGOẠI TỆ TỨC THÌ</span>
+                            <span class="ex-card-label"><i class="icon-svg" data-lucide="arrow-left-right"></i> Quy đổi ngoại tệ tức thì</span>
                             <span class="badge-time">Tỷ giá thời gian thực</span>
                         </div>
                         <div class="converter-inputs-tri">
                             <div class="conv-field">
                                 <label>Won (KRW)</label>
-                                <input type="text" inputmode="numeric" id="krwInput" placeholder="12,222" value="12,222"
+                                <input type="text" inputmode="numeric" id="krwInput" placeholder="0" value=""
                                     oninput="formatInputLive(this); convertFromKRW()">
                             </div>
                             <div class="conv-field">
                                 <label>Đồng (VND)</label>
-                                <input type="text" inputmode="numeric" id="vndInput" placeholder="234,051" value="234,051"
+                                <input type="text" inputmode="numeric" id="vndInput" placeholder="0" value=""
                                     oninput="formatInputLive(this); convertFromVND()">
                             </div>
                             <div class="conv-field">
                                 <label>USD ($)</label>
-                                <input type="text" inputmode="numeric" id="usdInput" placeholder="9.09" value="9.09"
+                                <input type="text" inputmode="numeric" id="usdInput" placeholder="0" value=""
                                     oninput="formatInputLive(this); convertFromUSD()">
                             </div>
                         </div>
-                        <div class="converter-sync-result" id="converterResult">12.222 ₩ ≈ 234.051 ₫ | $9.09</div>
+                        <div class="converter-sync-result" id="converterResult">Nhập số tiền để quy đổi</div>
                     </div>
                 </section>
 
@@ -291,12 +291,12 @@
                     <div class="metric-glass-card">
                         <div class="metric-top-row">
                             <span class="metric-kicker">SỐ DƯ HIỆN TẠI</span>
-                            <span class="metric-pill unified">Hợp nhất</span>
+                            <span class="metric-pill unified">Lũy kế</span>
                         </div>
-                        <div class="metric-value" id="totalBalance">25,984,768 ₩</div>
+                        <div class="metric-value" id="totalBalance">-- ₩</div>
                         <div class="metric-sub" id="balanceKRW"></div>
                         <div class="metric-footer">
-                            <span class="metric-growth pos"><i class="icon-svg" data-lucide="trending-up"></i> Hợp nhất tài sản</span>
+                            <span class="metric-growth pos"><i class="icon-svg" data-lucide="trending-up"></i> Toàn bộ các năm</span>
                             <svg class="sparkline-svg" viewBox="0 0 80 24">
                                 <path d="M 0,18 Q 20,20 40,10 T 80,4" fill="none" stroke="#00b894" stroke-width="2"
                                     stroke-linecap="round" />
@@ -307,9 +307,9 @@
                     <div class="metric-glass-card">
                         <div class="metric-top-row">
                             <span class="metric-kicker">TỔNG THU NHẬP</span>
-                            <span class="metric-pill year" id="cardIncomeYear">2026</span>
+                            <span class="metric-pill year" id="cardIncomeYear">Tất cả các năm</span>
                         </div>
-                        <div class="metric-value green" id="totalIncome">1,161,775 ₩</div>
+                        <div class="metric-value green" id="totalIncome">-- ₩</div>
                         <div class="metric-sub" id="incomeKRW"></div>
                         <div class="metric-footer">
                             <span class="metric-growth pos" id="incomeRatioText" onclick="openRatioConfigModal()" title="Nhấp để tùy chỉnh tỷ lệ %" style="cursor: pointer;"><i class="icon-svg" data-lucide="trending-up"></i> Quy tắc 40-40-20</span>
@@ -325,7 +325,7 @@
                             <span class="metric-kicker">TỔNG CHI TIÊU</span>
                             <span class="metric-pill control">Kiểm soát</span>
                         </div>
-                        <div class="metric-value red" id="totalExpense">95,877 ₩</div>
+                        <div class="metric-value red" id="totalExpense">-- ₩</div>
                         <div class="metric-sub" id="expenseKRW"></div>
                         <div class="metric-footer">
                             <span class="metric-growth red-text" id="expenseGrowthText"><i class="icon-svg" data-lucide="trending-down"></i> Chiếm 8.3% thu nhập</span>
@@ -341,7 +341,7 @@
                             <span class="metric-kicker">TÍCH LŨY RÒNG</span>
                             <span class="metric-pill excellent">Xuất sắc</span>
                         </div>
-                        <div class="metric-value blue" id="netSavingsTotal">1,065,898 ₩</div>
+                        <div class="metric-value blue" id="netSavingsTotal">-- ₩</div>
                         <div class="metric-sub" id="netSavingsSub"></div>
                         <div class="metric-footer">
                             <span class="metric-growth neutral" id="savingsRateSub">Tiết kiệm 92%</span>

@@ -892,6 +892,7 @@ function getAllTimeTotals() {
     const avgExp = count > 0 ? expKRW / count : 0;
     return { incKRW, expKRW, balanceKRW, reserveSum, avgExp };
 }
+window.getAllTimeTotals = getAllTimeTotals;
 
 // ===== Summary (VND cards at top) =====
 function renderSummary() {

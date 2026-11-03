@@ -1,5 +1,5 @@
 // ========================================================
-// FINMATE PRO - PORTFOLIO & ASSET MANAGEMENT MODULE
+// GOZ PRO - PORTFOLIO & ASSET MANAGEMENT MODULE
 // ========================================================
 
 const DEFAULT_PORTFOLIO_ASSETS = [
@@ -411,10 +411,18 @@ let liveAssetPollingTimer = null;
 function startLiveAssetPolling() {
     if (liveAssetPollingTimer) clearInterval(liveAssetPollingTimer);
     liveAssetPollingTimer = setInterval(() => {
+        if (document.hidden) return;
         refreshCryptoPrices();
         refreshStockPrices();
     }, 25000);
 }
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        refreshCryptoPrices();
+        refreshStockPrices();
+    }
+});
 
 // Calculate Total Portfolio Value in given currency
 function getPortfolioTotals() {
@@ -502,76 +510,69 @@ function formatCrossCurrenciesHTML(amount, sourceCur = 'KRW') {
 }
 window.formatCrossCurrenciesHTML = formatCrossCurrenciesHTML;
 
-// Update the 4 Overview Metric Cards matching Image 1
+// Update the 4 Overview Metric Cards - Lấy tổng của tất cả các năm (năm trước đó và năm nay)
 function updateOverviewCards() {
-    const { grandTotal } = getPortfolioTotals();
     const r = window.exchangeRate || 19.15;
     const u = window.usdRate || 25744;
 
-    // 1. SỐ DƯ HIỆN TẠI (Hợp nhất)
+    // Lấy tổng lũy kế tất cả các năm từ getAllTimeTotals
+    let incKRW = 0;
+    let expKRW = 0;
+    let balanceKRW = 0;
+
+    if (typeof window.getAllTimeTotals === 'function') {
+        const att = window.getAllTimeTotals();
+        incKRW = att.incKRW || 0;
+        expKRW = att.expKRW || 0;
+        balanceKRW = att.balanceKRW || 0;
+    }
+
+    // 1. SỐ DƯ HIỆN TẠI (Tổng số dư của tất cả các năm: năm trước đó và năm nay)
     const totalBalEl = document.getElementById('totalBalance');
     const balKRWEl = document.getElementById('balanceKRW');
     if (totalBalEl) {
-        totalBalEl.textContent = fmtDisplayCur(grandTotal);
+        const balInDisplay = convertCurrency(balanceKRW, 'KRW', displayCurrency);
+        totalBalEl.textContent = fmtDisplayCur(balInDisplay);
+        totalBalEl.style.color = balanceKRW < 0 ? 'var(--accent-red)' : 'var(--text-primary)';
     }
     if (balKRWEl) {
-        balKRWEl.innerHTML = formatCrossCurrenciesHTML(grandTotal, displayCurrency);
+        balKRWEl.innerHTML = formatCrossCurrenciesHTML(balanceKRW, 'KRW');
     }
 
-    // 2. TỔNG THU NHẬP (2026 / Năm đang chọn)
-    let incVal = 0;
-    let expVal = 0;
-    const yr = window.budgetYear || (new Date().getFullYear());
+    // 2. TỔNG THU NHẬP (Tổng thu nhập của tất cả các năm: năm trước đó và năm nay)
     const yrPill = document.getElementById('cardIncomeYear');
-    if (yrPill) yrPill.textContent = yr;
-
-    if (typeof window.getBudgetTotals === 'function') {
-        const t = window.getBudgetTotals(yr);
-        if (t && (t.incKRW > 0 || t.expKRW > 0)) {
-            incVal = t.incKRW;
-            expVal = t.expKRW;
-        }
-    }
-    if (incVal === 0 && expVal === 0 && typeof window.getAllTimeTotals === 'function') {
-        const t = window.getAllTimeTotals();
-        if (t && (t.incKRW > 0 || t.expKRW > 0)) {
-            incVal = t.incKRW;
-            expVal = t.expKRW;
-        }
-    }
-    if (incVal === 0) incVal = 15969999;
-    if (expVal === 0) expVal = 4008312;
+    if (yrPill) yrPill.textContent = 'Tất cả các năm';
 
     const totalIncEl = document.getElementById('totalIncome');
     const incKRWEl = document.getElementById('incomeKRW');
     if (totalIncEl) {
-        const incInDisplay = convertCurrency(incVal, 'KRW', displayCurrency);
+        const incInDisplay = convertCurrency(incKRW, 'KRW', displayCurrency);
         totalIncEl.textContent = fmtDisplayCur(incInDisplay);
     }
     if (incKRWEl) {
-        incKRWEl.innerHTML = formatCrossCurrenciesHTML(incVal, 'KRW');
+        incKRWEl.innerHTML = formatCrossCurrenciesHTML(incKRW, 'KRW');
     }
 
-    // 3. TỔNG CHI TIÊU
+    // 3. TỔNG CHI TIÊU (Tổng chi tiêu của tất cả các năm)
     const totalExpEl = document.getElementById('totalExpense');
     const expKRWEl = document.getElementById('expenseKRW');
     if (totalExpEl) {
-        const expInDisplay = convertCurrency(expVal, 'KRW', displayCurrency);
+        const expInDisplay = convertCurrency(expKRW, 'KRW', displayCurrency);
         totalExpEl.textContent = fmtDisplayCur(expInDisplay);
     }
     if (expKRWEl) {
-        expKRWEl.innerHTML = formatCrossCurrenciesHTML(expVal, 'KRW');
+        expKRWEl.innerHTML = formatCrossCurrenciesHTML(expKRW, 'KRW');
     }
     const expGrowthEl = document.getElementById('expenseGrowthText');
     if (expGrowthEl) {
-        const pctExp = incVal > 0 ? ((expVal / incVal) * 100).toFixed(1) : '0';
+        const pctExp = incKRW > 0 ? ((expKRW / incKRW) * 100).toFixed(1) : '0';
         expGrowthEl.innerHTML = `<i class="icon-svg" data-lucide="trending-down"></i> Chiếm ${pctExp}% thu nhập`;
     }
 
-    // 4. TÍCH LŨY RÒNG
+    // 4. TÍCH LŨY RÒNG (Lũy kế tất cả các năm)
     const netSavingsEl = document.getElementById('netSavingsTotal');
     const netSavingsSubEl = document.getElementById('netSavingsSub');
-    const netSavingsVal = Math.max(0, incVal - expVal);
+    const netSavingsVal = Math.max(0, balanceKRW);
     if (netSavingsEl) {
         const netInDisplay = convertCurrency(netSavingsVal, 'KRW', displayCurrency);
         netSavingsEl.textContent = fmtDisplayCur(netInDisplay);
@@ -581,8 +582,8 @@ function updateOverviewCards() {
     }
     const savingsSubEl = document.getElementById('savingsRateSub');
     if (savingsSubEl) {
-        const pct = incVal > 0 ? Math.round((netSavingsVal / incVal) * 100) : 92;
-        savingsSubEl.textContent = 'Tiết kiệm ' + pct + '%';
+        const pct = incKRW > 0 ? Math.round((balanceKRW / incKRW) * 100) : 0;
+        savingsSubEl.textContent = 'Tiết kiệm ' + Math.max(0, pct) + '%';
     }
 
     // Synchronize ratio labels
@@ -1445,11 +1446,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPortfolioData();
         startLiveAssetPolling();
 
-        // Pre-fill instant converter inputs
-        const krwIn = document.getElementById('krwInput');
-        if (krwIn && !krwIn.value) {
-            krwIn.value = '10,000';
-            if (typeof window.convertFromKRW === 'function') window.convertFromKRW();
-        }
+
     }, 200);
 });

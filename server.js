@@ -32,5 +32,5 @@ http.createServer((req, res) => {
         res.end(data);
     });
 }).listen(PORT, () => {
-    console.log(`FinMate Pro Server running on http://localhost:${PORT}`);
+    console.log(`GOZ PRO Server running on http://localhost:${PORT}`);
 });
