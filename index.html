@@ -21,7 +21,7 @@
     <meta http-equiv="Expires" content="0">
     <script>
         (function () {
-            const CURRENT_VER = 'v67';
+            const CURRENT_VER = 'v68';
             if (localStorage.getItem('goz_app_ver') !== CURRENT_VER) {
                 localStorage.setItem('goz_app_ver', CURRENT_VER);
                 if ('caches' in window) {
@@ -35,7 +35,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=67">
+    <link rel="stylesheet" href="style.css?v=68">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebApplication","name":"Dashboard Tài Chính","description":"Ứng dụng quản lý thu nhập và chi tiêu cá nhân thông minh","applicationCategory":"FinanceApplication"}
@@ -291,12 +291,12 @@
                     <div class="metric-glass-card">
                         <div class="metric-top-row">
                             <span class="metric-kicker">SỐ DƯ HIỆN TẠI</span>
-                            <span class="metric-pill unified">Lũy kế</span>
+                            <span class="metric-pill unified">Tài sản ròng</span>
                         </div>
                         <div class="metric-value" id="totalBalance">-- ₩</div>
                         <div class="metric-sub" id="balanceKRW"></div>
                         <div class="metric-footer">
-                            <span class="metric-growth pos"><i class="icon-svg" data-lucide="trending-up"></i> Toàn bộ các năm</span>
+                            <span class="metric-growth pos"><i class="icon-svg" data-lucide="trending-up"></i> Thu chi + Đầu tư</span>
                             <svg class="sparkline-svg" viewBox="0 0 80 24">
                                 <path d="M 0,18 Q 20,20 40,10 T 80,4" fill="none" stroke="#00b894" stroke-width="2"
                                     stroke-linecap="round" />
@@ -339,7 +339,7 @@
                     <div class="metric-glass-card">
                         <div class="metric-top-row">
                             <span class="metric-kicker">TÍCH LŨY RÒNG</span>
-                            <span class="metric-pill excellent">Xuất sắc</span>
+                            <span class="metric-pill excellent">Dòng tiền</span>
                         </div>
                         <div class="metric-value blue" id="netSavingsTotal">-- ₩</div>
                         <div class="metric-sub" id="netSavingsSub"></div>
@@ -1084,10 +1084,10 @@
         </section>
     </div>
     <div class="toast" id="toast"></div>
-    <script src="supabase.js?v=67"></script>
+    <script src="supabase.js?v=68"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="app.js?v=67"></script>
-    <script src="portfolio.js?v=67"></script>
+    <script src="app.js?v=68"></script>
+    <script src="portfolio.js?v=68"></script>
 </body>
 
 </html>

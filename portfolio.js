@@ -527,16 +527,19 @@ function updateOverviewCards() {
         balanceKRW = att.balanceKRW || 0;
     }
 
-    // 1. SỐ DƯ HIỆN TẠI (Tổng số dư của tất cả các năm: năm trước đó và năm nay)
+    // 1. SỐ DƯ HIỆN TẠI (Tài sản ròng / Net Worth = Dòng tiền thu chi tích lũy + Toàn bộ danh mục đầu tư)
+    const { grandTotal } = (typeof getPortfolioTotals === 'function') ? getPortfolioTotals() : { grandTotal: 0 };
+    const balanceInDisplay = convertCurrency(balanceKRW, 'KRW', displayCurrency);
+    const netWorthInDisplay = balanceInDisplay + (Number(grandTotal) || 0);
+
     const totalBalEl = document.getElementById('totalBalance');
     const balKRWEl = document.getElementById('balanceKRW');
     if (totalBalEl) {
-        const balInDisplay = convertCurrency(balanceKRW, 'KRW', displayCurrency);
-        totalBalEl.textContent = fmtDisplayCur(balInDisplay);
-        totalBalEl.style.color = balanceKRW < 0 ? 'var(--accent-red)' : 'var(--text-primary)';
+        totalBalEl.textContent = fmtDisplayCur(netWorthInDisplay);
+        totalBalEl.style.color = netWorthInDisplay < 0 ? 'var(--accent-red)' : 'var(--text-primary)';
     }
     if (balKRWEl) {
-        balKRWEl.innerHTML = formatCrossCurrenciesHTML(balanceKRW, 'KRW');
+        balKRWEl.innerHTML = formatCrossCurrenciesHTML(netWorthInDisplay, displayCurrency);
     }
 
     // 2. TỔNG THU NHẬP (Tổng thu nhập của tất cả các năm: năm trước đó và năm nay)
@@ -569,16 +572,16 @@ function updateOverviewCards() {
         expGrowthEl.innerHTML = `<i class="icon-svg" data-lucide="trending-down"></i> Chiếm ${pctExp}% thu nhập`;
     }
 
-    // 4. TÍCH LŨY RÒNG (Lũy kế tất cả các năm)
+    // 4. TÍCH LŨY RÒNG (Lũy kế dòng tiền thu chi: Thu nhập - Chi tiêu)
     const netSavingsEl = document.getElementById('netSavingsTotal');
     const netSavingsSubEl = document.getElementById('netSavingsSub');
-    const netSavingsVal = Math.max(0, balanceKRW);
     if (netSavingsEl) {
-        const netInDisplay = convertCurrency(netSavingsVal, 'KRW', displayCurrency);
+        const netInDisplay = convertCurrency(balanceKRW, 'KRW', displayCurrency);
         netSavingsEl.textContent = fmtDisplayCur(netInDisplay);
+        netSavingsEl.style.color = balanceKRW < 0 ? 'var(--accent-red)' : '';
     }
     if (netSavingsSubEl) {
-        netSavingsSubEl.innerHTML = formatCrossCurrenciesHTML(netSavingsVal, 'KRW');
+        netSavingsSubEl.innerHTML = formatCrossCurrenciesHTML(balanceKRW, 'KRW');
     }
     const savingsSubEl = document.getElementById('savingsRateSub');
     if (savingsSubEl) {
