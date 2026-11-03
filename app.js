@@ -713,34 +713,72 @@ async function fetchExchangeRate() {
 }
 
 function convertFromKRW() {
-    const r = exchangeRate || 18.5, u = usdRate || 25500;
-    const krw = parseRawValue(document.getElementById('krwInput').value);
-    document.getElementById('vndInput').value = '';
-    document.getElementById('usdInput').value = '';
-    if (!krw) { document.getElementById('converterResult').textContent = 'Nhập số tiền để quy đổi'; return; }
-    const vnd = Math.round(krw * r);
-    const usd = (krw * r / u).toFixed(2);
-    document.getElementById('converterResult').innerHTML = 'VND ' + fmtVND(vnd) + '&nbsp;&nbsp;|&nbsp;&nbsp;USD $' + fmtFull(parseFloat(usd));
+    const r = (window.exchangeRate && window.exchangeRate > 0) ? window.exchangeRate : 19.15;
+    const u = (window.usdRate && window.usdRate > 0) ? window.usdRate : 25744;
+    const raw = parseRawValue(document.getElementById('krwInput')?.value);
+    if (!raw) {
+        const vndEl = document.getElementById('vndInput');
+        const usdEl = document.getElementById('usdInput');
+        const resEl = document.getElementById('converterResult');
+        if (vndEl) vndEl.value = '';
+        if (usdEl) usdEl.value = '';
+        if (resEl) resEl.textContent = 'Nhập số tiền để quy đổi';
+        return;
+    }
+    const vnd = Math.round(raw * r);
+    const usd = (raw * r / u);
+    const vndEl = document.getElementById('vndInput');
+    const usdEl = document.getElementById('usdInput');
+    const resEl = document.getElementById('converterResult');
+    if (vndEl) vndEl.value = vnd.toLocaleString('vi-VN');
+    if (usdEl) usdEl.value = usd.toFixed(2);
+    if (resEl) resEl.innerHTML = `${raw.toLocaleString('vi-VN')} ₩ ≈ ${vnd.toLocaleString('vi-VN')} ₫ | $${usd.toFixed(2)}`;
 }
+
 function convertFromVND() {
-    const r = exchangeRate || 18.5, u = usdRate || 25500;
-    const vnd = parseRawValue(document.getElementById('vndInput').value);
-    document.getElementById('krwInput').value = '';
-    document.getElementById('usdInput').value = '';
-    if (!vnd) { document.getElementById('converterResult').textContent = 'Nhập số tiền để quy đổi'; return; }
-    const krw = Math.round(vnd / r);
-    const usd = (vnd / u).toFixed(2);
-    document.getElementById('converterResult').innerHTML = 'KRW ' + fmtKRW(krw) + '&nbsp;&nbsp;|&nbsp;&nbsp;USD $' + fmtFull(parseFloat(usd));
+    const r = (window.exchangeRate && window.exchangeRate > 0) ? window.exchangeRate : 19.15;
+    const u = (window.usdRate && window.usdRate > 0) ? window.usdRate : 25744;
+    const raw = parseRawValue(document.getElementById('vndInput')?.value);
+    if (!raw) {
+        const krwEl = document.getElementById('krwInput');
+        const usdEl = document.getElementById('usdInput');
+        const resEl = document.getElementById('converterResult');
+        if (krwEl) krwEl.value = '';
+        if (usdEl) usdEl.value = '';
+        if (resEl) resEl.textContent = 'Nhập số tiền để quy đổi';
+        return;
+    }
+    const krw = Math.round(raw / r);
+    const usd = (raw / u);
+    const krwEl = document.getElementById('krwInput');
+    const usdEl = document.getElementById('usdInput');
+    const resEl = document.getElementById('converterResult');
+    if (krwEl) krwEl.value = krw.toLocaleString('vi-VN');
+    if (usdEl) usdEl.value = usd.toFixed(2);
+    if (resEl) resEl.innerHTML = `${krw.toLocaleString('vi-VN')} ₩ ≈ ${raw.toLocaleString('vi-VN')} ₫ | $${usd.toFixed(2)}`;
 }
+
 function convertFromUSD() {
-    const r = exchangeRate || 18.5, u = usdRate || 25500;
-    const usd = parseRawValue(document.getElementById('usdInput').value);
-    document.getElementById('krwInput').value = '';
-    document.getElementById('vndInput').value = '';
-    if (!usd) { document.getElementById('converterResult').textContent = 'Nhập số tiền để quy đổi'; return; }
-    const vnd = Math.round(usd * u);
-    const krw = Math.round(usd * u / r);
-    document.getElementById('converterResult').innerHTML = 'KRW ' + fmtKRW(krw) + '&nbsp;&nbsp;|&nbsp;&nbsp;VND ' + fmtVND(vnd);
+    const r = (window.exchangeRate && window.exchangeRate > 0) ? window.exchangeRate : 19.15;
+    const u = (window.usdRate && window.usdRate > 0) ? window.usdRate : 25744;
+    const raw = parseRawValue(document.getElementById('usdInput')?.value);
+    if (!raw) {
+        const krwEl = document.getElementById('krwInput');
+        const vndEl = document.getElementById('vndInput');
+        const resEl = document.getElementById('converterResult');
+        if (krwEl) krwEl.value = '';
+        if (vndEl) vndEl.value = '';
+        if (resEl) resEl.textContent = 'Nhập số tiền để quy đổi';
+        return;
+    }
+    const vnd = Math.round(raw * u);
+    const krw = Math.round(raw * u / r);
+    const krwEl = document.getElementById('krwInput');
+    const vndEl = document.getElementById('vndInput');
+    const resEl = document.getElementById('converterResult');
+    if (krwEl) krwEl.value = krw.toLocaleString('vi-VN');
+    if (vndEl) vndEl.value = vnd.toLocaleString('vi-VN');
+    if (resEl) resEl.innerHTML = `${krw.toLocaleString('vi-VN')} ₩ ≈ ${vnd.toLocaleString('vi-VN')} ₫ | $${raw.toFixed(2)}`;
 }
 
 function renderAll() {
@@ -2286,6 +2324,13 @@ function switchTab(tabId) {
     if (headerBtn) {
         headerBtn.classList.add('active');
     }
+
+    // Update overview quick sub-tab buttons
+    document.querySelectorAll('.ov-tab-btn').forEach(btn => {
+        if (!btn.classList.contains('ov-refresh')) {
+            btn.classList.toggle('active', btn.dataset.tab === tabId);
+        }
+    });
 
     // Update mobile bottom navigation active state
     document.querySelectorAll('.mobile-bottom-nav a').forEach(link => {

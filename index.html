@@ -21,7 +21,7 @@
     <meta http-equiv="Expires" content="0">
     <script>
         (function () {
-            const CURRENT_VER = 'v66';
+            const CURRENT_VER = 'v67';
             if (localStorage.getItem('goz_app_ver') !== CURRENT_VER) {
                 localStorage.setItem('goz_app_ver', CURRENT_VER);
                 if ('caches' in window) {
@@ -35,7 +35,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=66">
+    <link rel="stylesheet" href="style.css?v=67">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebApplication","name":"Dashboard Tài Chính","description":"Ứng dụng quản lý thu nhập và chi tiêu cá nhân thông minh","applicationCategory":"FinanceApplication"}
@@ -198,7 +198,7 @@
         <main class="main-content header-layout" role="main">
             <!-- TAB 1: TỔNG QUAN -->
             <div id="tab-overview" class="tab-pane active animate-tab-content">
-                <!-- OVERVIEW SUB-TOOLBAR (RATES & CURRENCY SWITCHER) -->
+                <!-- OVERVIEW SUB-TOOLBAR (RATES, CURRENCY SWITCHER & QUICK TABS) -->
                 <div class="overview-header-bar">
                     <div class="overview-tools-left">
                         <!-- Live Rates Chip -->
@@ -217,62 +217,72 @@
                                 <i class="icon-svg" data-lucide="refresh-cw"></i>
                             </button>
                         </div>
+
+                        <!-- Currency Switcher Segmented Control -->
+                        <div class="currency-toggle-group">
+                            <button class="cur-btn" id="curBtnVND" data-cur="VND"
+                                onclick="setDisplayCurrency('VND')">VND</button>
+                            <button class="cur-btn active" id="curBtnKRW" data-cur="KRW"
+                                onclick="setDisplayCurrency('KRW')">KRW</button>
+                            <button class="cur-btn" id="curBtnUSD" data-cur="USD"
+                                onclick="setDisplayCurrency('USD')">USD</button>
+                        </div>
                     </div>
 
-                    <!-- Currency Switcher Segmented Control -->
-                    <div class="currency-toggle-group">
-                        <button class="cur-btn" id="curBtnVND" data-cur="VND"
-                            onclick="setDisplayCurrency('VND')">VND</button>
-                        <button class="cur-btn active" id="curBtnKRW" data-cur="KRW"
-                            onclick="setDisplayCurrency('KRW')">KRW</button>
-                        <button class="cur-btn" id="curBtnUSD" data-cur="USD"
-                            onclick="setDisplayCurrency('USD')">USD</button>
+                    <!-- Quick Navigation Pills (Matching media_1793698460424_de0fe200.png) -->
+                    <div class="overview-quick-tabs">
+                        <button class="ov-tab-btn active" data-tab="overview" onclick="switchTab('overview')">Tổng quan</button>
+                        <button class="ov-tab-btn" data-tab="budget" onclick="switchTab('budget')">Thu chi 12T</button>
+                        <button class="ov-tab-btn" data-tab="assets" onclick="switchTab('assets')">Cơ cấu tài sản</button>
+                        <button class="ov-tab-btn ov-refresh" onclick="fetchExchangeRate(); refreshCryptoPrices(); refreshStockPrices();" title="Làm mới">
+                            <i class="icon-svg" data-lucide="refresh-cw"></i> Làm mới
+                        </button>
                     </div>
                 </div>
 
-                <!-- ROW 1: 3 EXCHANGE & CONVERTER CARDS -->
+                <!-- ROW 1: 3 EXCHANGE & CONVERTER CARDS (Matching media_1793698460424_de0fe200.png) -->
                 <section class="exchange-tri-grid" aria-label="Tỷ giá hối đoái">
                     <div class="ex-card">
                         <div class="ex-card-header">
-                            <span class="ex-card-label"><i class="icon-svg" data-lucide="refresh-cw"></i> KRW / VND</span>
+                            <span class="ex-card-label"><i class="icon-svg" data-lucide="refresh-cw"></i> KRW SANG VND</span>
                             <span class="badge-realtime" id="exchangeStatus">Realtime</span>
                         </div>
                         <div class="ex-card-val" id="exchangeRateValue">19.15 đ</div>
-                        <div class="ex-card-sub" id="exchangeSubtext"><span class="badge-sub-pill pos">+0.12% 24h</span></div>
+                        <div class="ex-card-sub" id="exchangeSubtext">1 KRW = 19.15 VND</div>
                     </div>
 
                     <div class="ex-card">
                         <div class="ex-card-header">
-                            <span class="ex-card-label"><i class="icon-svg" data-lucide="circle-dollar-sign"></i> USD / VND</span>
+                            <span class="ex-card-label"><i class="icon-svg" data-lucide="circle-dollar-sign"></i> USD SANG VND</span>
                             <span class="badge-usd">USD</span>
                         </div>
                         <div class="ex-card-val" id="usdRateValue">25,744 đ</div>
-                        <div class="ex-card-sub" id="usdSubtext"><span class="badge-sub-pill pos">+0.05% 24h</span></div>
+                        <div class="ex-card-sub" id="usdSubtext">1 USD = 25,744 VND</div>
                     </div>
 
                     <div class="ex-card converter-card-box">
                         <div class="ex-card-header">
-                            <span class="ex-card-label"><i class="icon-svg" data-lucide="arrow-left-right"></i> Quy Đổi Ngoại Tệ</span>
-                            <span class="badge-time">Tức thì</span>
+                            <span class="ex-card-label"><i class="icon-svg" data-lucide="arrow-left-right"></i> QUY ĐỔI NGOẠI TỆ TỨC THÌ</span>
+                            <span class="badge-time">Tỷ giá thời gian thực</span>
                         </div>
                         <div class="converter-inputs-tri">
                             <div class="conv-field">
-                                <label>Won (₩)</label>
-                                <input type="text" inputmode="numeric" id="krwInput" placeholder="10,000"
+                                <label>Won (KRW)</label>
+                                <input type="text" inputmode="numeric" id="krwInput" placeholder="12,222" value="12,222"
                                     oninput="formatInputLive(this); convertFromKRW()">
                             </div>
                             <div class="conv-field">
-                                <label>Đồng (₫)</label>
-                                <input type="text" inputmode="numeric" id="vndInput" placeholder="191,500"
+                                <label>Đồng (VND)</label>
+                                <input type="text" inputmode="numeric" id="vndInput" placeholder="234,051" value="234,051"
                                     oninput="formatInputLive(this); convertFromVND()">
                             </div>
                             <div class="conv-field">
                                 <label>USD ($)</label>
-                                <input type="text" inputmode="numeric" id="usdInput" placeholder="7.44"
+                                <input type="text" inputmode="numeric" id="usdInput" placeholder="9.09" value="9.09"
                                     oninput="formatInputLive(this); convertFromUSD()">
                             </div>
                         </div>
-                        <div class="converter-sync-result" id="converterResult">10,000 ₩ ≈ 191,500 ₫ | $7.44</div>
+                        <div class="converter-sync-result" id="converterResult">12.222 ₩ ≈ 234.051 ₫ | $9.09</div>
                     </div>
                 </section>
 
@@ -445,33 +455,54 @@
                 <!-- HERO PORTFOLIO CARD -->
                 <section class="portfolio-hero-card" aria-label="Tổng quan danh mục đầu tư">
                     <div class="portfolio-hero-header">
-                        <span class="portfolio-hero-kicker">TỔNG DANH MỤC ĐẦU TƯ & TIỀN MẶT</span>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <div class="currency-toggle-group">
-                                <button class="cur-btn" data-cur="VND" onclick="setDisplayCurrency('VND')">VND</button>
-                                <button class="cur-btn active" data-cur="KRW"
-                                    onclick="setDisplayCurrency('KRW')">KRW</button>
-                                <button class="cur-btn" data-cur="USD" onclick="setDisplayCurrency('USD')">USD</button>
-                            </div>
-                            <span class="badge-item-count" id="assetTotalCountBadge">10 Mục tài sản</span>
+                        <div class="portfolio-hero-kicker-group">
+                            <span class="portfolio-hero-kicker">TỔNG DANH MỤC ĐẦU TƯ & TIỀN MẶT</span>
+                            <span class="badge-item-count" id="assetTotalCountBadge">4 Mục tài sản</span>
+                        </div>
+                        <div class="currency-toggle-group">
+                            <button class="cur-btn" data-cur="VND" onclick="setDisplayCurrency('VND')">VND</button>
+                            <button class="cur-btn active" data-cur="KRW"
+                                onclick="setDisplayCurrency('KRW')">KRW</button>
+                            <button class="cur-btn" data-cur="USD" onclick="setDisplayCurrency('USD')">USD</button>
                         </div>
                     </div>
                     <div class="portfolio-hero-main">
-                        <h2 class="portfolio-hero-amount" id="portfolioHeroTotal">25,981,901 ₩</h2>
+                        <h2 class="portfolio-hero-amount" id="portfolioHeroTotal">7,178,599 ₩</h2>
+                        <div class="portfolio-hero-sub" id="portfolioHeroSub"></div>
                     </div>
                     <div class="portfolio-hero-breakdown">
-                        <div class="portfolio-sub-card cash" onclick="setAssetFilter('cash')">
-                            <div class="sub-card-title"><i class="icon-svg" data-lucide="wallet"></i> Tiền mặt</div>
-                            <div class="sub-card-val" id="heroCashTotal">5,777,358 ₩</div>
-                        </div>
-                        <div class="portfolio-sub-card crypto" onclick="setAssetFilter('crypto')">
-                            <div class="sub-card-title"><i class="icon-svg" data-lucide="coins"></i> Crypto</div>
-                            <div class="sub-card-val" id="heroCryptoTotal">15,914,951 ₩</div>
-                        </div>
-                        <div class="portfolio-sub-card stocks" onclick="setAssetFilter('stock_vn')">
-                            <div class="sub-card-title"><i class="icon-svg" data-lucide="trending-up"></i> Cổ phiếu VN
+                        <div class="portfolio-sub-card cash" onclick="setAssetFilter('cash')" title="Lọc xem Tiền mặt">
+                            <div class="sub-card-top">
+                                <span class="sub-card-label"><i class="icon-svg" data-lucide="wallet"></i> Tiền mặt</span>
+                                <span class="sub-card-pct" id="heroCashPct">--%</span>
                             </div>
-                            <div class="sub-card-val" id="heroStockTotal">4,289,592 ₩</div>
+                            <div class="sub-card-val" id="heroCashTotal">-- ₩</div>
+                            <div class="sub-card-bar">
+                                <div class="sub-card-fill cash-fill" id="heroCashBar" style="width: 0%;"></div>
+                            </div>
+                            <div class="sub-card-note" id="heroCashNote">An toàn & Sẵn sàng</div>
+                        </div>
+                        <div class="portfolio-sub-card crypto" onclick="setAssetFilter('crypto')" title="Lọc xem Crypto Coin">
+                            <div class="sub-card-top">
+                                <span class="sub-card-label"><i class="icon-svg" data-lucide="coins"></i> Crypto</span>
+                                <span class="sub-card-pct" id="heroCryptoPct">--%</span>
+                            </div>
+                            <div class="sub-card-val" id="heroCryptoTotal">-- ₩</div>
+                            <div class="sub-card-bar">
+                                <div class="sub-card-fill crypto-fill" id="heroCryptoBar" style="width: 0%;"></div>
+                            </div>
+                            <div class="sub-card-note" id="heroCryptoNote">--</div>
+                        </div>
+                        <div class="portfolio-sub-card stocks" onclick="setAssetFilter('stock_vn')" title="Lọc xem Cổ phiếu VN">
+                            <div class="sub-card-top">
+                                <span class="sub-card-label"><i class="icon-svg" data-lucide="trending-up"></i> Cổ phiếu VN</span>
+                                <span class="sub-card-pct" id="heroStockPct">--%</span>
+                            </div>
+                            <div class="sub-card-val" id="heroStockTotal">-- ₩</div>
+                            <div class="sub-card-bar">
+                                <div class="sub-card-fill stock-fill" id="heroStockBar" style="width: 0%;"></div>
+                            </div>
+                            <div class="sub-card-note" id="heroStockNote">--</div>
                         </div>
                     </div>
                 </section>
@@ -480,15 +511,19 @@
                 <div class="asset-filters-bar">
                     <button class="asset-filter-pill active" id="filter-asset-all" onclick="setAssetFilter('all')">
                         <i class="icon-svg" data-lucide="layers"></i> <span>Tất cả</span>
+                        <span class="filter-count-badge" id="filterCountAll">4</span>
                     </button>
                     <button class="asset-filter-pill" id="filter-asset-crypto" onclick="setAssetFilter('crypto')">
                         <i class="icon-svg" data-lucide="coins"></i> <span>Crypto Coin</span>
+                        <span class="filter-count-badge" id="filterCountCrypto">1</span>
                     </button>
                     <button class="asset-filter-pill" id="filter-asset-stock_vn" onclick="setAssetFilter('stock_vn')">
                         <i class="icon-svg" data-lucide="trending-up"></i> <span>Cổ Phiếu VN</span>
+                        <span class="filter-count-badge" id="filterCountStocks">1</span>
                     </button>
                     <button class="asset-filter-pill" id="filter-asset-cash" onclick="setAssetFilter('cash')">
                         <i class="icon-svg" data-lucide="wallet"></i> <span>Tiền Mặt</span>
+                        <span class="filter-count-badge" id="filterCountCash">2</span>
                     </button>
                 </div>
 
@@ -738,7 +773,7 @@
                                 <div class="settings-option">
                                     <div class="settings-option-text">
                                         <h4>Phiên bản & Cập nhật PWA</h4>
-                                        <p>Phiên bản: <strong>v66 (Synchronized Ratios, Compact Header & Multi-Currency Sub-Values)</strong></p>
+                                        <p>Phiên bản: <strong>v67 (Restored Quick Sub-Tabs, Refined Converter & Ultra-Modern Portfolio UX/UI)</strong></p>
                                         <p class="update-status-sub" id="updateStatusText">Ứng dụng tự động tải bản mới
                                             khi đẩy code lên Git.</p>
                                     </div>
@@ -1049,10 +1084,10 @@
         </section>
     </div>
     <div class="toast" id="toast"></div>
-    <script src="supabase.js?v=66"></script>
+    <script src="supabase.js?v=67"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="app.js?v=66"></script>
-    <script src="portfolio.js?v=66"></script>
+    <script src="app.js?v=67"></script>
+    <script src="portfolio.js?v=67"></script>
 </body>
 
 </html>

@@ -632,18 +632,68 @@ window.renderPortfolio = function () {
         }
     });
 
-    // Update Hero Card
+    // Update Hero Card Breakdown & Percentages
+    const grandTotalVal = grandTotal > 0 ? grandTotal : 1;
+    const cashPct = Math.round((cashTotalInCur / grandTotalVal) * 100);
+    const cryptoPct = Math.round((cryptoTotalInCur / grandTotalVal) * 100);
+    const stockPct = Math.max(0, 100 - cashPct - cryptoPct);
+
     const heroTotalEl = document.getElementById('portfolioHeroTotal');
+    const heroSubEl = document.getElementById('portfolioHeroSub');
     const heroCashEl = document.getElementById('heroCashTotal');
     const heroCryptoEl = document.getElementById('heroCryptoTotal');
     const heroStockEl = document.getElementById('heroStockTotal');
     const countBadge = document.getElementById('assetTotalCountBadge');
 
     if (heroTotalEl) heroTotalEl.textContent = fmtDisplayCur(grandTotal);
+    if (heroSubEl) heroSubEl.innerHTML = formatCrossCurrenciesHTML(grandTotal, displayCurrency);
     if (heroCashEl) heroCashEl.textContent = fmtDisplayCur(cashTotalInCur);
     if (heroCryptoEl) heroCryptoEl.textContent = fmtDisplayCur(cryptoTotalInCur);
     if (heroStockEl) heroStockEl.textContent = fmtDisplayCur(stockTotalInCur);
     if (countBadge) countBadge.textContent = portfolioAssets.length + ' Mục tài sản';
+
+    const elCashPct = document.getElementById('heroCashPct');
+    const elCashBar = document.getElementById('heroCashBar');
+    if (elCashPct) elCashPct.textContent = cashPct + '%';
+    if (elCashBar) elCashBar.style.width = cashPct + '%';
+
+    const elCryptoPct = document.getElementById('heroCryptoPct');
+    const elCryptoBar = document.getElementById('heroCryptoBar');
+    const elCryptoNote = document.getElementById('heroCryptoNote');
+    if (elCryptoPct) elCryptoPct.textContent = cryptoPct + '%';
+    if (elCryptoBar) elCryptoBar.style.width = cryptoPct + '%';
+    if (elCryptoNote) {
+        const diffUSD = cryptoValUSD - cryptoCostUSD;
+        const pct = cryptoCostUSD > 0 ? (diffUSD / cryptoCostUSD) * 100 : 0;
+        const sign = diffUSD >= 0 ? '+' : '';
+        const usdSign = diffUSD >= 0 ? '+$' : '-$';
+        elCryptoNote.className = 'sub-card-note ' + (diffUSD >= 0 ? 'pos' : 'neg');
+        elCryptoNote.textContent = `${sign}${pct.toFixed(1)}% (${usdSign}${Math.round(Math.abs(diffUSD))})`;
+    }
+
+    const elStockPct = document.getElementById('heroStockPct');
+    const elStockBar = document.getElementById('heroStockBar');
+    const elStockNote = document.getElementById('heroStockNote');
+    if (elStockPct) elStockPct.textContent = stockPct + '%';
+    if (elStockBar) elStockBar.style.width = stockPct + '%';
+    if (elStockNote) {
+        const diffVND = stockValVND - stockCostVND;
+        const pct = stockCostVND > 0 ? (diffVND / stockCostVND) * 100 : 0;
+        const sign = diffVND >= 0 ? '+' : '';
+        elStockNote.className = 'sub-card-note ' + (diffVND >= 0 ? 'pos' : 'neg');
+        const diffM = Math.abs(diffVND) >= 1000000 ? (Math.abs(diffVND) / 1000000).toFixed(1) + 'tr' : Math.round(Math.abs(diffVND)).toLocaleString('vi-VN');
+        elStockNote.textContent = `${sign}${pct.toFixed(1)}% (${sign}${diffM})`;
+    }
+
+    // Update Filter Counts
+    const elCountAll = document.getElementById('filterCountAll');
+    const elCountCrypto = document.getElementById('filterCountCrypto');
+    const elCountStocks = document.getElementById('filterCountStocks');
+    const elCountCash = document.getElementById('filterCountCash');
+    if (elCountAll) elCountAll.textContent = portfolioAssets.length;
+    if (elCountCrypto) elCountCrypto.textContent = cryptoItems.length;
+    if (elCountStocks) elCountStocks.textContent = stockItems.length;
+    if (elCountCash) elCountCash.textContent = cashItems.length;
 
     // Update Section Subtitles
     const cryptoSub = document.getElementById('cryptoSummarySub');
@@ -652,7 +702,14 @@ window.renderPortfolio = function () {
         const pct = cryptoCostUSD > 0 ? (diffUSD / cryptoCostUSD) * 100 : 0;
         const sign = diffUSD >= 0 ? '+' : '';
         const usdSign = diffUSD >= 0 ? '+$' : '-$';
-        cryptoSub.textContent = 'Tổng: ' + fmtDisplayCur(cryptoTotalInCur) + '  ' + sign + pct.toFixed(2) + '% (' + usdSign + Math.abs(diffUSD).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ')';
+        const isPos = diffUSD >= 0;
+        cryptoSub.innerHTML = `
+            <span class="section-sub-val">Tổng: <strong>${fmtDisplayCur(cryptoTotalInCur)}</strong></span>
+            <span class="section-pnl-pill ${isPos ? 'pos' : 'neg'}">
+                <i class="icon-svg" data-lucide="${isPos ? 'trending-up' : 'trending-down'}"></i>
+                ${sign}${pct.toFixed(2)}% (${usdSign}${Math.abs(diffUSD).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+            </span>
+        `;
     }
 
     const stockSub = document.getElementById('stockSummarySub');
@@ -660,12 +717,19 @@ window.renderPortfolio = function () {
         const diffVND = stockValVND - stockCostVND;
         const pct = stockCostVND > 0 ? (diffVND / stockCostVND) * 100 : 0;
         const sign = diffVND >= 0 ? '+' : '';
-        stockSub.textContent = 'Tổng: ' + fmtDisplayCur(stockTotalInCur) + '  ' + sign + pct.toFixed(2) + '% (' + sign + diffVND.toLocaleString('vi-VN') + ' đ)';
+        const isPos = diffVND >= 0;
+        stockSub.innerHTML = `
+            <span class="section-sub-val">Tổng: <strong>${fmtDisplayCur(stockTotalInCur)}</strong></span>
+            <span class="section-pnl-pill ${isPos ? 'pos' : 'neg'}">
+                <i class="icon-svg" data-lucide="${isPos ? 'trending-up' : 'trending-down'}"></i>
+                ${sign}${pct.toFixed(2)}% (${sign}${diffVND.toLocaleString('vi-VN')} ₫)
+            </span>
+        `;
     }
 
     const cashSub = document.getElementById('cashSummarySub');
     if (cashSub) {
-        cashSub.textContent = 'Tổng: ' + fmtDisplayCur(cashTotalInCur);
+        cashSub.innerHTML = `<span class="section-sub-val">Tổng: <strong>${fmtDisplayCur(cashTotalInCur)}</strong></span>`;
     }
 
     // Render Crypto List
@@ -684,25 +748,35 @@ window.renderPortfolio = function () {
                 return `
                     <div class="asset-item-row">
                         <div class="asset-item-left">
-                            <div class="asset-badge ${badgeClass}">${escapeHtml(c.symbol)}</div>
+                            <div class="asset-badge crypto-badge ${badgeClass}">
+                                <span class="badge-symbol-text">${escapeHtml(c.symbol)}</span>
+                            </div>
                             <div class="asset-info">
-                                <div class="asset-name-row">
-                                    <span>${escapeHtml(c.name)}</span>
-                                    <span class="asset-live-price">$${Number(c.current_price).toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                                <div class="asset-title-line">
+                                    <span class="asset-symbol-strong">${escapeHtml(c.symbol)}</span>
+                                    <span class="asset-name-muted">${escapeHtml(c.name)}</span>
+                                    <span class="asset-price-pill" title="Giá thời gian thực">
+                                        $${Number(c.current_price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                    </span>
                                 </div>
-                                <div class="asset-holdings-row">
-                                    Nắm giữ: <strong>${c.amount} ${escapeHtml(c.symbol)}</strong> (Giá mua: $${Number(c.buy_price).toLocaleString('en-US')})
+                                <div class="asset-meta-line">
+                                    <span>Nắm giữ: <strong>${Number(c.amount).toLocaleString('en-US')} ${escapeHtml(c.symbol)}</strong></span>
+                                    <span class="meta-dot">•</span>
+                                    <span>Giá mua: <strong>$${Number(c.buy_price).toLocaleString('en-US', { maximumFractionDigits: 4 })}</strong></span>
                                 </div>
                             </div>
                         </div>
                         <div class="asset-item-right">
-                            <div class="asset-values">
+                            <div class="asset-values-block">
                                 <div class="asset-val-main">${fmtDisplayCur(c.valInDisplay)}</div>
-                                <div class="asset-pnl ${isPos ? 'pos' : 'neg'}">${sign}${pct.toFixed(1)}% (${usdSign}${Math.abs(diff).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</div>
+                                <div class="asset-pnl-chip ${isPos ? 'pos' : 'neg'}">
+                                    <i class="icon-svg" data-lucide="${isPos ? 'trending-up' : 'trending-down'}"></i>
+                                    <span>${sign}${pct.toFixed(2)}% (${usdSign}${Math.abs(diff).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span>
+                                </div>
                             </div>
-                            <div class="asset-actions">
-                                <button class="asset-action-btn" onclick="openEditCryptoModal('${c.id}')" title="Sửa"><i class="icon-svg" data-lucide="pencil"></i></button>
-                                <button class="asset-action-btn delete" onclick="deleteAsset('${c.id}')" title="Xóa"><i class="icon-svg" data-lucide="trash-2"></i></button>
+                            <div class="asset-actions-block">
+                                <button class="asset-action-btn edit" onclick="openEditCryptoModal('${c.id}')" title="Sửa thông tin"><i class="icon-svg" data-lucide="pencil"></i></button>
+                                <button class="asset-action-btn delete" onclick="deleteAsset('${c.id}')" title="Xóa tài sản"><i class="icon-svg" data-lucide="trash-2"></i></button>
                             </div>
                         </div>
                     </div>
@@ -723,28 +797,39 @@ window.renderPortfolio = function () {
                 const isPos = diff >= 0;
                 const badgeClass = s.symbol.toLowerCase();
                 const sign = isPos ? '+' : '';
+                const cleanName = s.name.replace(/\s*\([^)]*\)/, '');
                 return `
                     <div class="asset-item-row">
                         <div class="asset-item-left">
-                            <div class="asset-badge ${badgeClass}">${escapeHtml(s.symbol)}</div>
+                            <div class="asset-badge stock-badge ${badgeClass}">
+                                <span class="badge-symbol-text">${escapeHtml(s.symbol)}</span>
+                            </div>
                             <div class="asset-info">
-                                <div class="asset-name-row">
-                                    <span>${escapeHtml(s.name)}</span>
-                                    <span class="asset-live-price">${s.current_price.toLocaleString('vi-VN')} đ</span>
+                                <div class="asset-title-line">
+                                    <span class="asset-symbol-strong">${escapeHtml(s.symbol)}</span>
+                                    <span class="asset-name-muted">${escapeHtml(cleanName)}</span>
+                                    <span class="asset-price-pill" title="Thị giá thời gian thực (DNSE)">
+                                        ${Number(s.current_price).toLocaleString('vi-VN')} ₫
+                                    </span>
                                 </div>
-                                <div class="asset-holdings-row">
-                                    KL: <strong>${s.amount.toLocaleString('vi-VN')} CP</strong> (Giá vốn: ${s.buy_price.toLocaleString('vi-VN')} đ)
+                                <div class="asset-meta-line">
+                                    <span>Khối lượng: <strong>${Number(s.amount).toLocaleString('vi-VN')} CP</strong></span>
+                                    <span class="meta-dot">•</span>
+                                    <span>Giá vốn: <strong>${Number(s.buy_price).toLocaleString('vi-VN')} ₫</strong></span>
                                 </div>
                             </div>
                         </div>
                         <div class="asset-item-right">
-                            <div class="asset-values">
+                            <div class="asset-values-block">
                                 <div class="asset-val-main">${fmtDisplayCur(s.valInDisplay)}</div>
-                                <div class="asset-pnl ${isPos ? 'pos' : 'neg'}">${sign}${pct.toFixed(1)}% (${sign}${diff.toLocaleString('vi-VN')} đ)</div>
+                                <div class="asset-pnl-chip ${isPos ? 'pos' : 'neg'}">
+                                    <i class="icon-svg" data-lucide="${isPos ? 'trending-up' : 'trending-down'}"></i>
+                                    <span>${sign}${pct.toFixed(2)}% (${sign}${diff.toLocaleString('vi-VN')} ₫)</span>
+                                </div>
                             </div>
-                            <div class="asset-actions">
-                                <button class="asset-action-btn" onclick="openEditStockModal('${s.id}')" title="Sửa"><i class="icon-svg" data-lucide="pencil"></i></button>
-                                <button class="asset-action-btn delete" onclick="deleteAsset('${s.id}')" title="Xóa"><i class="icon-svg" data-lucide="trash-2"></i></button>
+                            <div class="asset-actions-block">
+                                <button class="asset-action-btn edit" onclick="openEditStockModal('${s.id}')" title="Sửa thông tin"><i class="icon-svg" data-lucide="pencil"></i></button>
+                                <button class="asset-action-btn delete" onclick="deleteAsset('${s.id}')" title="Xóa tài sản"><i class="icon-svg" data-lucide="trash-2"></i></button>
                             </div>
                         </div>
                     </div>
@@ -764,24 +849,30 @@ window.renderPortfolio = function () {
                 return `
                     <div class="asset-item-row">
                         <div class="asset-item-left">
-                            <div class="asset-badge">${badgeSymbol}</div>
+                            <div class="asset-badge cash-badge">
+                                <span class="badge-symbol-text">${badgeSymbol}</span>
+                            </div>
                             <div class="asset-info">
-                                <div class="asset-name-row">
-                                    <span>${escapeHtml(k.name)}</span>
+                                <div class="asset-title-line">
+                                    <span class="asset-symbol-strong">${escapeHtml(k.name)}</span>
+                                    <span class="asset-price-pill cash-pill">${k.currency}</span>
                                 </div>
-                                <div class="asset-holdings-row">
-                                    Nguyên tệ: <strong>${k.amount.toLocaleString('vi-VN')} ${k.currency}</strong>
+                                <div class="asset-meta-line">
+                                    <span>Nguyên tệ: <strong>${Number(k.amount).toLocaleString('vi-VN')} ${k.currency}</strong></span>
                                 </div>
                             </div>
                         </div>
                         <div class="asset-item-right">
-                            <div class="asset-values">
+                            <div class="asset-values-block">
                                 <div class="asset-val-main">${fmtDisplayCur(k.valInDisplay)}</div>
-                                <div class="asset-pnl pos">Tiền mặt nhàn rỗi</div>
+                                <div class="asset-pnl-chip cash-chip">
+                                    <i class="icon-svg" data-lucide="shield-check"></i>
+                                    <span>Tiền mặt nhàn rỗi</span>
+                                </div>
                             </div>
-                            <div class="asset-actions">
-                                <button class="asset-action-btn" onclick="openEditCashModal('${k.id}')" title="Sửa"><i class="icon-svg" data-lucide="pencil"></i></button>
-                                <button class="asset-action-btn delete" onclick="deleteAsset('${k.id}')" title="Xóa"><i class="icon-svg" data-lucide="trash-2"></i></button>
+                            <div class="asset-actions-block">
+                                <button class="asset-action-btn edit" onclick="openEditCashModal('${k.id}')" title="Sửa thông tin"><i class="icon-svg" data-lucide="pencil"></i></button>
+                                <button class="asset-action-btn delete" onclick="deleteAsset('${k.id}')" title="Xóa tài sản"><i class="icon-svg" data-lucide="trash-2"></i></button>
                             </div>
                         </div>
                     </div>
