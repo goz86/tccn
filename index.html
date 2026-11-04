@@ -21,7 +21,7 @@
     <meta http-equiv="Expires" content="0">
     <script>
         (function () {
-            const CURRENT_VER = 'v70';
+            const CURRENT_VER = 'v76';
             if (localStorage.getItem('goz_app_ver') !== CURRENT_VER) {
                 localStorage.setItem('goz_app_ver', CURRENT_VER);
                 if ('caches' in window) {
@@ -35,7 +35,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=70">
+    <link rel="stylesheet" href="style.css?v=76">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebApplication","name":"Dashboard Tài Chính","description":"Ứng dụng quản lý thu nhập và chi tiêu cá nhân thông minh","applicationCategory":"FinanceApplication"}
@@ -201,23 +201,6 @@
                 <!-- OVERVIEW SUB-TOOLBAR (RATES, CURRENCY SWITCHER & QUICK TABS) -->
                 <div class="overview-header-bar">
                     <div class="overview-tools-left">
-                        <!-- Live Rates Chip -->
-                        <div class="header-rate-chip" title="Tỷ giá hối đoái thời gian thực">
-                            <span class="pulse-dot"></span>
-                            <div class="hdr-rate-item">
-                                <span class="hdr-rate-lbl">1₩:</span>
-                                <strong id="hdrRateKrw">19.15 đ</strong>
-                            </div>
-                            <span class="hdr-rate-divider">|</span>
-                            <div class="hdr-rate-item">
-                                <span class="hdr-rate-lbl">1$:</span>
-                                <strong id="hdrRateUsd">25,744 đ</strong>
-                            </div>
-                            <button class="hdr-refresh-btn" onclick="fetchExchangeRate(); refreshCryptoPrices(); refreshStockPrices();" title="Làm mới tỷ giá & tài sản">
-                                <i class="icon-svg" data-lucide="refresh-cw"></i>
-                            </button>
-                        </div>
-
                         <!-- Currency Switcher Segmented Control -->
                         <div class="currency-toggle-group">
                             <button class="cur-btn" id="curBtnVND" data-cur="VND"
@@ -234,9 +217,6 @@
                         <button class="ov-tab-btn active" data-tab="overview" onclick="switchTab('overview')">Tổng quan</button>
                         <button class="ov-tab-btn" data-tab="budget" onclick="switchTab('budget')">Thu chi 12T</button>
                         <button class="ov-tab-btn" data-tab="assets" onclick="switchTab('assets')">Cơ cấu tài sản</button>
-                        <button class="ov-tab-btn ov-refresh" onclick="fetchExchangeRate(); refreshCryptoPrices(); refreshStockPrices();" title="Làm mới">
-                            <i class="icon-svg" data-lucide="refresh-cw"></i> Làm mới
-                        </button>
                     </div>
                 </div>
 
@@ -244,7 +224,7 @@
                 <section class="exchange-tri-grid" aria-label="Tỷ giá hối đoái">
                     <div class="ex-card">
                         <div class="ex-card-header">
-                            <span class="ex-card-label"><i class="icon-svg" data-lucide="refresh-cw"></i> KRW SANG VND</span>
+                            <span class="ex-card-label"><i class="icon-svg" data-lucide="coins"></i> KRW SANG VND</span>
                             <span class="badge-realtime" id="exchangeStatus">Realtime</span>
                         </div>
                         <div class="ex-card-val" id="exchangeRateValue">19.15 đ</div>
@@ -583,74 +563,61 @@
             <!-- TAB 2: LỊCH SỬ TỶ GIÁ -->
             <div id="tab-exchange" class="tab-pane animate-tab-content">
                 <section class="panel exchange-chart-panel" aria-label="Lịch sử tỷ giá">
-                    <div class="panel-header"
-                        style="flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
-                        <h2 class="panel-title">Lịch sử Tỷ giá (15 ngày)</h2>
-                        <div class="exchange-legend-selector">
-                            <button class="exchange-mode-btn active" id="btnRateBoth"
-                                onclick="setExchangeRateMode('both')" title="Xem tất cả tỷ giá">
-                                <span class="dot-indicator both"></span> <span>Tất cả</span>
+                    <div class="panel-header exchange-chart-header">
+                        <div class="exchange-header-title-row">
+                            <h2 class="panel-title" id="exchangePanelTitle">Lịch sử Tỷ giá (15 ngày)</h2>
+                            <div class="exchange-range-selector" role="group" aria-label="Khoảng thời gian">
+                                <button class="rate-range-btn" id="btnRange7" onclick="setExchangeRangeDays(7)">7N</button>
+                                <button class="rate-range-btn active" id="btnRange15" onclick="setExchangeRangeDays(15)">15N</button>
+                                <button class="rate-range-btn" id="btnRange30" onclick="setExchangeRangeDays(30)">30N</button>
+                                <button class="rate-range-btn" id="btnRange90" onclick="setExchangeRangeDays(90)">90N</button>
+                            </div>
+                        </div>
+
+                        <!-- Bộ chọn chế độ hiển thị (Lưới 3 Biểu đồ trực quan / Từng cặp riêng / % So sánh) -->
+                        <div class="exchange-legend-selector" role="tablist">
+                            <button class="exchange-mode-btn active" id="btnRateGrid" onclick="setExchangeRateMode('grid')"
+                                title="Xem trực quan cùng lúc cả 3 biểu đồ riêng">
+                                <i class="icon-svg" data-lucide="layout-grid"></i> <span>Lưới 3 Biểu đồ</span>
                             </button>
                             <button class="exchange-mode-btn" id="btnRateKRW" onclick="setExchangeRateMode('krw')"
-                                title="Chỉ xem KRW/VND">
+                                title="Phóng to riêng KRW/VND (Trục đơn ₫)">
                                 <span class="dot-indicator krw"></span> <span>KRW/VND</span>
                             </button>
                             <button class="exchange-mode-btn" id="btnRateUSD" onclick="setExchangeRateMode('usd')"
-                                title="Chỉ xem USD/VND">
+                                title="Phóng to riêng USD/VND (Trục đơn ₫)">
                                 <span class="dot-indicator usd"></span> <span>USD/VND</span>
                             </button>
                             <button class="exchange-mode-btn" id="btnRateUSDKRW" onclick="setExchangeRateMode('usdKrw')"
-                                title="Chỉ xem USD/KRW">
+                                title="Phóng to riêng USD/KRW (Trục đơn ₩)">
                                 <span class="dot-indicator usdkrw"></span> <span>USD/KRW</span>
+                            </button>
+                            <button class="exchange-mode-btn" id="btnRatePct" onclick="setExchangeRateMode('pct')"
+                                title="So sánh % thay đổi so với ngày đầu trên 1 trục">
+                                <span class="dot-indicator pct"></span> <span>% So sánh</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Triple Currency Stats summary cards -->
-                    <div class="exchange-stats-summary triple-currency-stats">
-                        <div class="exchange-stat-card krw-stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-flag"><span class="dot-indicator krw"></span> KRW/VND</span>
-                            </div>
-                            <div class="stat-current-val" id="krwHistoryCurrent">-- ₫</div>
-                            <div class="stat-minmax-row">
-                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg"
-                                        data-lucide="arrow-up-right"></i> <span id="krwHistoryMax">-- ₫</span></span>
-                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg"
-                                        data-lucide="arrow-down-right"></i> <span id="krwHistoryMin">-- ₫</span></span>
-                            </div>
+                    <!-- Metadata bar: Nguồn dữ liệu & Cập nhật lần cuối & Nhãn trạng thái -->
+                    <div class="exchange-meta-bar">
+                        <div class="exchange-meta-left">
+                            <span class="meta-status-chip live" id="exchangeMetaStatus">
+                                <span class="pulse-dot"></span> <span id="exchangeStatusText">Realtime Live</span>
+                            </span>
+                            <span class="exchange-meta-item">
+                                <i class="icon-svg" data-lucide="clock"></i> Cập nhật lúc: <strong id="exchangeLastUpdated">--</strong>
+                            </span>
                         </div>
-
-                        <div class="exchange-stat-card usd-stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-flag"><span class="dot-indicator usd"></span> USD/VND</span>
-                            </div>
-                            <div class="stat-current-val" id="usdHistoryCurrent">-- ₫</div>
-                            <div class="stat-minmax-row">
-                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg"
-                                        data-lucide="arrow-up-right"></i> <span id="usdHistoryMax">-- ₫</span></span>
-                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg"
-                                        data-lucide="arrow-down-right"></i> <span id="usdHistoryMin">-- ₫</span></span>
-                            </div>
-                        </div>
-
-                        <div class="exchange-stat-card usdkrw-stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-flag"><span class="dot-indicator usdkrw"></span> USD/KRW</span>
-                            </div>
-                            <div class="stat-current-val" id="usdKrwHistoryCurrent">-- ₩</div>
-                            <div class="stat-minmax-row">
-                                <span class="stat-badge max" title="Cao nhất 15 ngày"><i class="icon-svg"
-                                        data-lucide="arrow-up-right"></i> <span id="usdKrwHistoryMax">-- ₩</span></span>
-                                <span class="stat-badge min" title="Thấp nhất 15 ngày"><i class="icon-svg"
-                                        data-lucide="arrow-down-right"></i> <span id="usdKrwHistoryMin">--
-                                        ₩</span></span>
-                            </div>
+                        <div class="exchange-meta-right">
+                            <span class="exchange-meta-item">
+                                <i class="icon-svg" data-lucide="database"></i> Nguồn: <strong id="exchangeDataSource">Open Exchange Rates & ECB</strong>
+                            </span>
                         </div>
                     </div>
 
-                    <!-- History line chart container -->
-                    <div class="exchange-chart-container-large" id="exchangeRateHistoryChart"></div>
+                    <!-- Main Chart Display Area: Render 3 dedicated charts in grid OR 1 hero chart -->
+                    <div class="exchange-main-display" id="exchangeRateHistoryChart"></div>
                 </section>
             </div>
 
@@ -816,7 +783,7 @@
         <a href="javascript:void(0)" onclick="switchTab('assets')" id="m-nav-assets"><i class="icon-svg"
                 data-lucide="wallet"></i><span>Tài sản</span></a>
         <a href="javascript:void(0)" onclick="switchTab('budget')" id="m-nav-budget"><i class="icon-svg"
-                data-lucide="calendar-range"></i><span>Ngân sách 12T</span></a>
+                data-lucide="calendar-range"></i><span>Ngân sách</span></a>
         <a href="javascript:void(0)" onclick="switchTab('exchange')" id="m-nav-exchange"><i class="icon-svg"
                 data-lucide="trending-up"></i><span>Tỷ giá</span></a>
         <a href="javascript:void(0)" onclick="switchTab('settings')" id="m-nav-settings"><i class="icon-svg"
@@ -904,13 +871,6 @@
             </div>
         </section>
     </div>
-
-
-    <!-- FLOATING MOBILE VIEW BUTTON -->
-    <button class="floating-mobile-btn" onclick="toggleMobileViewMode()" title="Chuyển chế độ xem di động">
-        <i class="icon-svg" data-lucide="smartphone"></i>
-        <span>Xem Bản Mobile</span>
-    </button>
 
     <!-- MODAL 1: THÊM / SỬA CRYPTO COIN -->
     <div class="goz-confirm-backdrop" id="assetCryptoModal" aria-hidden="true"
@@ -1094,6 +1054,7 @@
     <div class="toast" id="toast"></div>
     <script src="supabase.js?v=70"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="gsap.min.js?v=76"></script>
     <script src="app.js?v=70"></script>
     <script src="portfolio.js?v=70"></script>
 </body>

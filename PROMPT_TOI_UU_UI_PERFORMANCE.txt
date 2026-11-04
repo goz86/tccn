@@ -1,0 +1,89 @@
+================================================================================
+PROMPT TỐI ƯU HIỆU NĂNG GIAO DIỆN (UI PERFORMANCE & MOBILE RESPONSIVE 60-120 FPS)
+Dựa trên kiến trúc chuẩn của repo jinil-landing-page (/business)
+================================================================================
+
+Bạn là Senior Full-Stack Developer và UI/UX Performance Specialist.
+Hãy tối ưu toàn diện hiệu năng và giao diện web app này để đạt độ mượt mà 60–120 FPS, chuyển Tab tức thì không khựng, và hoàn thiện chuẩn Responsive Mobile theo các yêu cầu chi tiết sau:
+
+--------------------------------------------------------------------------------
+1. TỐI ƯU CHUYỂN TAB SIÊU MƯỢT (GSAP WATERFALL CASCADE & TAB RENDER CACHE)
+--------------------------------------------------------------------------------
+- Tích hợp thư viện GSAP (gsap.min.js):
+  + Áp dụng pattern WaterfallTab chuẩn từ repo jinil-landing-page (/business):
+    gsap.fromTo(targets, {
+        y: 16,
+        autoAlpha: 0
+    }, {
+        y: 0,
+        autoAlpha: 1,
+        duration: 0.28,
+        stagger: 0.03, // Thác nước so le nhanh 30ms
+        ease: 'power2.out',
+        force3D: true, // Ép phần cứng GPU xử lý
+        clearProps: 'transform,opacity,visibility' // Tự dọn sạch style inline khi xong
+    });
+  + Quét các thẻ quan trọng (.waterfall-item, section, .card-item, .panel...) và giới hạn tối đa 8 phần tử (slice(0, 8)) để duy trì ổn định 60-120 FPS.
+  + Luôn gọi gsap.killTweensOf(targets) ngay khi chuyển tab để hủy animation cũ nếu người dùng click liên tục cực nhanh (chống giật khung hình / micro-stutter).
+
+- Cơ chế Tab Render Cache (Lazy-Mounting):
+  + Biểu đồ Canvas (Chart.js), bảng tính DOM phức tạp và SVG chỉ render ĐÚNG 1 LẦN DUY NHẤT khi người dùng mở tab đó lần đầu.
+  + Khi người dùng quay lại các tab đã mở, tái sử dụng 100% DOM có sẵn, chuyển tab trong 0ms (dưới 35ms), tuyệt đối không tính toán lại dữ liệu hay vẽ lại canvas.
+  + Tạo hàm invalidateTabCache(tabId) để làm mới cache khi người dùng thêm/sửa/xóa dữ liệu hoặc đổi đơn vị tiền tệ.
+  + Chuyển các hàm fetch API live (Crypto, Chứng khoán, Tỷ giá) sang cơ chế chạy ngầm (non-blocking) và throttle tối thiểu 60-90 giây/lần để không làm nghẽn luồng chính.
+
+- CSS Tab Pane:
+  + Loại bỏ mọi CSS @keyframes delay so le phức tạp gây xung đột với GSAP.
+  + Tab pane ẩn/hiện dứt khoát:
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+--------------------------------------------------------------------------------
+2. CHUẨN HÓA RESPONSIVE MOBILE (KHÔNG LỖI BỐ CỤC / KHÔNG CHE KHUẤT)
+--------------------------------------------------------------------------------
+- Nút điều khiển góc phải Header (header-tools-right):
+  + Cố định kích thước cả 3 nút (Ổ khóa Privacy, Đổi Theme, Avatar người dùng) thành hình vuông bo góc chuẩn 36px × 36px (border-radius: 10px).
+  + Luôn set: flex: 0 0 36px !important; flex-shrink: 0 !important; width: 36px !important; height: 36px !important;
+  + Tuyệt đối không để flexbox co ép bề ngang khiến nút ổ khóa bị méo thành hình viên thuốc dẹt đứng.
+  + Icon bên trong căn giữa hoàn hảo: display: inline-flex; align-items: center; justify-content: center;.
+
+- Tránh thanh điều hướng đáy (Bottom Nav) che khuất nội dung:
+  + Tăng padding-bottom cho khung nội dung chính:
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 16px)) !important;
+  + Đảm bảo các thẻ cuối trang (mục tiêu tiết kiệm, nút bấm, footer) luôn thoáng đãng và nhìn thấy rõ 100%.
+  + Nhãn tab trên thanh bottom nav rút gọn 1–2 từ (ví dụ: Tổng quan, Tài sản, Ngân sách, Tỷ giá, Cài đặt) để không bị cắt thành dấu ba chấm (...).
+
+- Vuốt ngang cảm ứng (Horizontal Touch Swiping):
+  + Mọi thanh bộ lọc (Filter pills) và thanh chọn chế độ (Segmented control) phải hỗ trợ lướt ngang mượt mà trên màn hình cảm ứng:
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    white-space: nowrap !important;
+
+--------------------------------------------------------------------------------
+3. TIÊU CHUẨN NÚT CHỌN CHẾ ĐỘ BIỂU ĐỒ (SEGMENTED PILL BUTTONS)
+--------------------------------------------------------------------------------
+- Bọc toàn bộ các nút trong khung pill bo góc:
+  .exchange-legend-selector {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+  }
+- Nút thường: background: transparent; border: 1px solid transparent; border-radius: 9px; padding: 7px 14px; font-weight: 600; color: var(--text-secondary);
+- Nút kích hoạt (active): background: var(--bg-card); color: var(--text-primary); border-color: var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+- Có chấm màu chỉ báo trực quan tương ứng với màu nét vẽ biểu đồ.
+
+--------------------------------------------------------------------------------
+4. KIỂM THỬ TỰ ĐỘNG BẰNG TRÌNH DUYỆT (BROWSER TEST)
+--------------------------------------------------------------------------------
+- Dùng Puppeteer / Headless Chrome kết nối vào localhost:
+  + Kiểm tra kích thước boundingClientRect của nút ổ khóa, theme, avatar (đúng 36x36, flex-shrink = 0).
+  + Kiểm tra tràn màn hình ngang (scrollWidth <= clientWidth).
+  + Đo thời gian phản hồi khi chuyển tab qua lại (phải dưới 50ms).
+  + Xác nhận bắt 0 lỗi Console (0 console errors).
+================================================================================
+

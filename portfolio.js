@@ -66,6 +66,7 @@ window.setDisplayCurrency = function (cur) {
             else btn.classList.remove('active');
         }
     });
+    if (typeof window.invalidateTabCache === "function") window.invalidateTabCache();
     renderPortfolio();
     updateOverviewCards();
     if (typeof window.showToast === 'function') window.showToast('Đã đổi đơn vị hiển thị: ' + cur, 'info');
@@ -92,15 +93,6 @@ window.togglePrivacyMode = function () {
     }
 };
 
-// Floating Mobile View Mode Toggle
-window.toggleMobileViewMode = function () {
-    document.body.classList.toggle('mobile-preview-mode');
-    const isMobileMode = document.body.classList.contains('mobile-preview-mode');
-    if (typeof window.showToast === 'function') {
-        window.showToast(isMobileMode ? 'Đang xem ở giao diện mô phỏng Mobile' : 'Đã quay lại giao diện Dashboard', 'info');
-    }
-    if (typeof window.refreshIcons === 'function') window.refreshIcons();
-};
 
 // Filter Category Tabs
 window.setAssetFilter = function (filter) {
